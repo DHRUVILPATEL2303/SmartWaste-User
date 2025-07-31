@@ -7,12 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:502984754212:android:e1e572cb07629f9f2c04b1",
+        "mobilesdk_app_id": "1:502984754212:android:c93e0106687802712c04b1",
         "android_client_info": {
-          "package_name": "com.example.smartwaste_user"
+          "package_name": "com.example.smartwaste_admin"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "502984754212-mqpbm8qpllg1mjb3qsnuk4t2gav988vf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCs8SwGXWhpIRMS7ab0eVFzOszfKQ8Bg0g"
@@ -20,7 +25,78 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "502984754212-mqpbm8qpllg1mjb3qsnuk4t2gav988vf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502984754212:android:e1e572cb07629f9f2c04b1",
+        "android_client_info": {
+          "package_name": "com.example.smartwaste_user"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "502984754212-28lp354hpgel972e86uali4c8gsqff00.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartwaste_user",
+            "certificate_hash": "5c73950c21f9782a57137e7fa649f75d76f8a87f"
+          }
+        },
+        {
+          "client_id": "502984754212-mqpbm8qpllg1mjb3qsnuk4t2gav988vf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCs8SwGXWhpIRMS7ab0eVFzOszfKQ8Bg0g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "502984754212-mqpbm8qpllg1mjb3qsnuk4t2gav988vf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502984754212:android:7c7f8288eb9941512c04b1",
+        "android_client_info": {
+          "package_name": "com.example.smartwaste_waste_collector"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "502984754212-mqpbm8qpllg1mjb3qsnuk4t2gav988vf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCs8SwGXWhpIRMS7ab0eVFzOszfKQ8Bg0g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "502984754212-mqpbm8qpllg1mjb3qsnuk4t2gav988vf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
