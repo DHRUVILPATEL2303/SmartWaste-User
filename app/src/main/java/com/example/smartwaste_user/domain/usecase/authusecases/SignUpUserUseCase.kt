@@ -8,5 +8,5 @@ class SignUpUserUseCase @Inject constructor(
     private val authRepositry: AuthRepositry
 ) {
 
-    suspend fun signUpUserUseCase(password : String, userModel: UserModel) = authRepositry.signUpUserWithEmailAndPassword(password,userModel)
+    suspend fun execute(password : String, userModel: UserModel) = authRepositry.signUpUserWithEmailAndPassword(password,userModel)
 }

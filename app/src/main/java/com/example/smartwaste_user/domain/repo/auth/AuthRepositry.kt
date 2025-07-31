@@ -7,4 +7,8 @@ import com.google.firebase.auth.FirebaseUser
 interface AuthRepositry {
 
     suspend fun signUpUserWithEmailAndPassword( password : String,userModel: UserModel):ResultState<FirebaseUser>
+
+    suspend fun signInWithEmailAndPassword(email : String,password: String) : ResultState<FirebaseUser>
+
+    suspend fun firebaseSignInWithGoogle(idToken: String): ResultState<FirebaseUser>
 }

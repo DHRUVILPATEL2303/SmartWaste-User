@@ -1,4 +1,4 @@
-package com.example.smartwaste_user.presentation.screens.auth
+package com.example.smartwaste_user.presentation.screens.Auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -208,7 +208,7 @@ fun SignUpScreenUI(viewModel: AuthViewModel = hiltViewModel<AuthViewModel>(), na
 
                         TextButton(
                             onClick = {
-                                navController.navigate(Routes.LoginScreen)
+                                navController.popBackStack()
                             },
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         ) {

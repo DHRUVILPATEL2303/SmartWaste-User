@@ -1,5 +1,9 @@
 package com.example.smartwaste_user.presentation.screens.OnBoarding
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -18,22 +22,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.google.accompanist.pager.*
 import com.example.smartwaste_user.R
 import com.example.smartwaste_user.data.models.OnBoardingPage
 import com.example.smartwaste_user.presentation.navigation.Routes
+import com.example.smartwaste_user.presentation.viewmodels.OnboardingViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun OnBoardingScreenUI(navController: NavController) {
+fun OnBoardingScreenUI(navController: NavController,viewModel: OnboardingViewModel= hiltViewModel<OnboardingViewModel>()) {
     val pagerState = rememberPagerState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -59,7 +66,8 @@ fun OnBoardingScreenUI(navController: NavController) {
         bottomBar = {
             BottomBarContent(pagerState, pages.size) {
                 if (pagerState.currentPage == pages.lastIndex) {
-                    navController.navigate(Routes.SignUpScreen) {
+                    viewModel.setOnboardingShown()
+                    navController.navigate(Routes.LoginScreen) {
                         popUpTo(navController.graph.startDestinationId) { inclusive = true }
                     }
                 } else {
@@ -137,14 +145,23 @@ fun BottomBarContent(pagerState: PagerState, pageCount: Int, onNextClick: () -> 
 }
 
 @Composable
-fun OnBoardingPageContent(page: OnBoardingPage, pageIndex: Int, currentPage: Int) {
+fun OnBoardingPageContent(
+    page: OnBoardingPage,
+    pageIndex: Int,
+    currentPage: Int
+) {
+    val isCurrentPage = pageIndex == currentPage
+
     val scale by animateFloatAsState(
-        targetValue = if (pageIndex == currentPage) 1f else 0.9f,
-        animationSpec = tween(durationMillis = 400, easing = { it * it * (3 - 2 * it) })
+        targetValue = if (isCurrentPage) 1f else 0.92f,
+        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
+        label = "scale"
     )
+
     val alpha by animateFloatAsState(
-        targetValue = if (pageIndex == currentPage) 1f else 0.7f,
-        animationSpec = tween(durationMillis = 400)
+        targetValue = if (isCurrentPage) 1f else 0.5f,
+        animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing),
+        label = "alpha"
     )
 
     Column(
@@ -152,34 +169,40 @@ fun OnBoardingPageContent(page: OnBoardingPage, pageIndex: Int, currentPage: Int
             .fillMaxSize()
             .padding(horizontal = 24.dp, vertical = 32.dp)
             .scale(scale)
-            .alpha(alpha),
+            .alpha(alpha)
+            .animateContentSize(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)),
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-
         Image(
             painter = painterResource(id = page.imageRes),
             contentDescription = page.title,
             modifier = Modifier
-                .size(380.dp)
+                .size(if (isCurrentPage) 340.dp else 300.dp)
                 .clip(RoundedCornerShape(70.dp))
-
-                .padding(16.dp),
+                .padding(16.dp)
+                .graphicsLayer {
+                    shadowElevation = if (isCurrentPage) 12f else 2f
+                    shape = RoundedCornerShape(70.dp)
+                    clip = true
+                },
             contentScale = ContentScale.FillBounds
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.15f)),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.1f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier
+                    .padding(24.dp)
+                    .animateContentSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(

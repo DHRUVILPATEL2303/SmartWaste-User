@@ -5,6 +5,7 @@ import com.example.smartwaste_user.data.models.UserModel
 import com.example.smartwaste_user.domain.repo.auth.AuthRepositry
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -33,6 +34,30 @@ class AuthRepositryImpl @Inject constructor(
             ResultState.Success(firebaseAuth.currentUser!!)
         } catch (e: Exception) {
             ResultState.Error(e.localizedMessage ?: "Unknown error occurred")
+        }
+    }
+
+    override suspend fun signInWithEmailAndPassword(
+        email: String,
+        password: String
+    ): ResultState<FirebaseUser> {
+
+        return  try {
+            firebaseAuth.signInWithEmailAndPassword(email,password).await()
+            ResultState.Success(firebaseAuth.currentUser!!)
+        }catch (e: Exception){
+            ResultState.Error(e.localizedMessage!!)
+        }
+    }
+
+    override suspend fun firebaseSignInWithGoogle(idToken: String): ResultState<FirebaseUser> {
+        return try {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            firebaseAuth.signInWithCredential(credential).await()
+            ResultState.Success(firebaseAuth.currentUser!!)
+
+        } catch (e: Exception) {
+            ResultState.Error(e.localizedMessage.toString())
         }
     }
 }

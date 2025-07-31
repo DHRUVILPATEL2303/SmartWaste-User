@@ -92,7 +92,7 @@ dependencies {
 
 
 
-
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
     // In build.gradle (module)
     implementation("androidx.compose.foundation:foundation:1.6.0")
 
