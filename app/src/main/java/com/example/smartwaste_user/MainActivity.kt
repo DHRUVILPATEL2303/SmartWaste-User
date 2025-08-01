@@ -1,22 +1,21 @@
 package com.example.smartwaste_user
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.view.WindowCompat
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.example.smartwaste_user.datastore.dataStore
 import com.example.smartwaste_user.presentation.navigation.AppNavigation
 import com.example.smartwaste_user.ui.theme.SmartWasteUserTheme
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
-import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -30,6 +29,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.navigationBarColor = Color.White.toArgb()
+        window.statusBarColor = Color.White.toArgb()
+
+        WindowCompat.getInsetsController(window, window.decorView)?.apply {
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
+        }
         val onboardingCompleted = runBlocking {
             val preferences = this@MainActivity.dataStore.data.first()
             preferences[booleanPreferencesKey("onboarding_completed")] ?: false
@@ -39,15 +46,21 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             SmartWasteUserTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) {innerPadding->
-                    Box(
-                        modifier = Modifier.padding(bottom=innerPadding.calculateBottomPadding())
-                    ){
-                        AppNavigation(shouldShowOnboarding = !onboardingCompleted, currentUser = auth.currentUser)
-                    }
-
+//                Scaffold(modifier = Modifier.fillMaxSize()) {innerPadding->
+//                    Box(modifier = Modifier.fillMaxSize().padding(inn)){
+                Surface(
+                    modifier = Modifier.navigationBarsPadding()
+                ) {
+                    AppNavigation(shouldShowOnboarding = !onboardingCompleted, currentUser = auth.currentUser)
 
                 }
+
+//                    }
+
+
+
+
+//                }
             }
         }
     }
