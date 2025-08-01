@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier.padding(bottom=innerPadding.calculateBottomPadding())
                     ){
-                        AppNavigation(shouldShowOnboarding = !onboardingCompleted)
+                        AppNavigation(shouldShowOnboarding = !onboardingCompleted, currentUser = auth.currentUser)
                     }
 
 

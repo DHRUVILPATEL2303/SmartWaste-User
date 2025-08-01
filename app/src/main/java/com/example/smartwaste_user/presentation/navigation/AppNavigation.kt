@@ -25,20 +25,24 @@ import com.example.smartwaste_user.presentation.screens.OnBoarding.OnBoardingScr
 import com.example.smartwaste_user.presentation.screens.Auth.SignUpScreenUI
 import com.example.smartwaste_user.presentation.viewmodels.AuthViewModel
 import com.example.smartwaste_user.presentation.viewmodels.OnboardingViewModel
+import com.google.firebase.auth.FirebaseUser
 
 @Composable
 fun AppNavigation(
     viewModel: AuthViewModel = hiltViewModel<AuthViewModel>(),
     onboardingViewModel: OnboardingViewModel = hiltViewModel<OnboardingViewModel>(),
-    shouldShowOnboarding: Boolean
+    shouldShowOnboarding: Boolean,
+    currentUser: FirebaseUser?
 ) {
     val navController = rememberNavController()
     val isOnboardingCompleted by onboardingViewModel.onboardingCompleted.collectAsState(initial = false)
 
     val startDestination = if (shouldShowOnboarding) {
         SubNavigation.OnBoardingScreen
-    } else {
+    } else if (currentUser==null){
         SubNavigation.AuthRoutes
+    }else{
+        SubNavigation.HomeRoutes
     }
 
     NavHost(
