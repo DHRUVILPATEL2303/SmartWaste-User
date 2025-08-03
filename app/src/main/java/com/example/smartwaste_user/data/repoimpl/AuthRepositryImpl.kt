@@ -1,6 +1,7 @@
 package com.example.smartwaste_user.data.repoimpl
 
 import com.example.smartwaste_user.common.ResultState
+import com.example.smartwaste_user.common.USERS_PATH
 import com.example.smartwaste_user.data.models.UserModel
 import com.example.smartwaste_user.domain.repo.auth.AuthRepositry
 import com.google.firebase.auth.FirebaseAuth
@@ -20,18 +21,22 @@ class AuthRepositryImpl @Inject constructor(
         userModel: UserModel
     ): ResultState<FirebaseUser> {
         return try {
-            firebaseAuth.createUserWithEmailAndPassword(userModel.email, password).await()
+            val result = firebaseAuth.createUserWithEmailAndPassword(userModel.email, password).await()
+            val user = result.user
 
+            user?.let {
 
-            userModel.userId = firebaseAuth.currentUser!!.uid
+                it.sendEmailVerification().await()
 
+                userModel.userId = it.uid
 
-            firebaseFirestore.collection("users")
-                .document(firebaseAuth.currentUser!!.uid)
-                .set(userModel)
-                .await()
+                firebaseFirestore.collection(USERS_PATH)
+                    .document(it.uid)
+                    .set(userModel)
+                    .await()
 
-            ResultState.Success(firebaseAuth.currentUser!!)
+                ResultState.Success(it)
+            } ?: ResultState.Error("User creation failed")
         } catch (e: Exception) {
             ResultState.Error(e.localizedMessage ?: "Unknown error occurred")
         }
@@ -41,12 +46,17 @@ class AuthRepositryImpl @Inject constructor(
         email: String,
         password: String
     ): ResultState<FirebaseUser> {
+        return try {
+            firebaseAuth.signInWithEmailAndPassword(email, password).await()
+            val user = firebaseAuth.currentUser
 
-        return  try {
-            firebaseAuth.signInWithEmailAndPassword(email,password).await()
-            ResultState.Success(firebaseAuth.currentUser!!)
-        }catch (e: Exception){
-            ResultState.Error(e.localizedMessage!!)
+            return if (user?.isEmailVerified == true) {
+                ResultState.Success(user)
+            } else {
+                ResultState.Error("Please verify your email before logging in.")
+            }
+        } catch (e: Exception) {
+            ResultState.Error(e.localizedMessage ?: "Unknown error occurred")
         }
     }
 

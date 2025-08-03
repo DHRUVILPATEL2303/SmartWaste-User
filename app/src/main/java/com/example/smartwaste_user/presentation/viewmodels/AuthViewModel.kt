@@ -28,6 +28,8 @@ class AuthViewModel @Inject constructor(
     private val loginUserUseCase: LoginUserUseCase
 ) : ViewModel() {
 
+    val _isEmailVerified = mutableStateOf<Boolean?>(null)
+    val isEmailVerified = _isEmailVerified
     private val _signUpState = MutableStateFlow(Common<FirebaseUser>())
     val signUpState = _signUpState.asStateFlow()
 
@@ -120,6 +122,14 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+
+
+    fun checkEmailVerification(user: FirebaseUser?) {
+        viewModelScope.launch {
+            user?.reload()
+            _isEmailVerified.value = user?.isEmailVerified
+        }
+    }
 }
 
 data class Common<T>(

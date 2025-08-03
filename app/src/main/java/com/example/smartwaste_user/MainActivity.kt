@@ -5,6 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -45,43 +51,17 @@ class MainActivity : ComponentActivity() {
 //
 
         setContent {
+
             SmartWasteUserTheme {
-//                Scaffold(modifier = Modifier.fillMaxSize()) {innerPadding->
-//                    Box(modifier = Modifier.fillMaxSize().padding(inn)){
-                Surface(
-                    modifier = Modifier.navigationBarsPadding()
-                ) {
-                    AppNavigation(shouldShowOnboarding = !onboardingCompleted, currentUser = auth.currentUser)
-
-                }
-
-//                    }
-
-
-
-
-//                }
+                AppNavigation(
+                    currentUser = auth.currentUser,
+                    shouldShowOnboarding = !onboardingCompleted,
+                )
             }
         }
+
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //        oneTapClient = Identity.getSignInClient(this)

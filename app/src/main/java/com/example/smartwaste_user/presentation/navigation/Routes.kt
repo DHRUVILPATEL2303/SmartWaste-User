@@ -26,6 +26,9 @@ sealed class Routes{
     @Serializable
     object ProfileScreen
 
+    @Serializable
+    object VerifyEmailScreen
+
 }
 
 
@@ -39,5 +42,8 @@ sealed class SubNavigation {
 
     @Serializable
     object OnBoardingScreen
+
+    @Serializable
+    object VerifyEmailRoutes
 
 }

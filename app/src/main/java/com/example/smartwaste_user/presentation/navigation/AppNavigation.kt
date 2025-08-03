@@ -1,5 +1,6 @@
 package com.example.smartwaste_user.presentation.navigation
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -35,6 +37,8 @@ import com.example.bottombar.model.IndicatorStyle
 import com.example.smartwaste_user.presentation.screens.Auth.LoginScreenUI
 import com.example.smartwaste_user.presentation.screens.OnBoarding.OnBoardingScreenUI
 import com.example.smartwaste_user.presentation.screens.Auth.SignUpScreenUI
+import com.example.smartwaste_user.presentation.screens.home.HomeScreenUI
+import com.example.smartwaste_user.presentation.screens.verificationScreens.VerificationScreenUI
 import com.example.smartwaste_user.presentation.viewmodels.AuthViewModel
 import com.example.smartwaste_user.presentation.viewmodels.OnboardingViewModel
 import com.google.firebase.auth.FirebaseUser
@@ -65,19 +69,21 @@ fun AppNavigation(
     onboardingViewModel: OnboardingViewModel = hiltViewModel<OnboardingViewModel>(),
     shouldShowOnboarding: Boolean,
     currentUser: FirebaseUser?,
-
 ) {
     val navController = rememberNavController()
     val isOnboardingCompleted by onboardingViewModel.onboardingCompleted.collectAsState(initial = false)
 
-    val startDestination = if (shouldShowOnboarding) {
-        SubNavigation.OnBoardingScreen
-    } else if (currentUser==null){
-        SubNavigation.AuthRoutes
-    }else{
-        SubNavigation.HomeRoutes
+    val startDestination = when {
+        shouldShowOnboarding -> SubNavigation.OnBoardingScreen
+        currentUser == null -> SubNavigation.AuthRoutes
+        currentUser.isEmailVerified-> SubNavigation.HomeRoutes
+        !currentUser.isEmailVerified -> SubNavigation.VerifyEmailRoutes
+
+        else -> SubNavigation.VerifyEmailRoutes
+
     }
 
+    Log.d("AppNavigation", "startDestination: $startDestination, isEmailVerified: ${currentUser?.isEmailVerified}")
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -88,7 +94,6 @@ fun AppNavigation(
     if (currentIndex != -1) selectedItem = currentIndex
 
     Scaffold(
-
         bottomBar = {
             if (currentBaseRoute in bottomBarRoutes) {
                 AnimatedBottomBar(
@@ -149,7 +154,7 @@ fun AppNavigation(
             navController = navController,
             startDestination = startDestination,
             modifier = Modifier
-//                .padding(paddingValues)
+                .padding(paddingValues)
                 .fillMaxSize()
         ) {
             navigation<SubNavigation.OnBoardingScreen>(startDestination = Routes.OnBoardingScreen) {
@@ -159,10 +164,10 @@ fun AppNavigation(
             }
             navigation<SubNavigation.AuthRoutes>(startDestination = Routes.LoginScreen) {
                 composable<Routes.LoginScreen> {
-                    LoginScreenUI(navController=navController)
+                    LoginScreenUI(navController = navController)
                 }
                 composable<Routes.SignUpScreen> {
-                    SignUpScreenUI(navController=navController)
+                    SignUpScreenUI(navController = navController)
                 }
             }
             navigation<SubNavigation.HomeRoutes>(startDestination = Routes.HomeScreen) {
@@ -177,6 +182,11 @@ fun AppNavigation(
                 }
                 composable<Routes.ProfileScreen> {
                     ProfileScreenUI(navController)
+                }
+            }
+            navigation<SubNavigation.VerifyEmailRoutes>(startDestination = Routes.VerifyEmailScreen) {
+                composable<Routes.VerifyEmailScreen> {
+                    VerificationScreenUI(navController, currentUser!!)
                 }
             }
         }
@@ -199,6 +209,5 @@ fun ReportScreenUI(navController: NavHostController) {
 }
 
 
-@Composable
-fun HomeScreenUI(navController: NavHostController) {
-}
+
+
