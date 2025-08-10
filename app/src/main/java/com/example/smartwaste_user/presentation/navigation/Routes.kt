@@ -29,6 +29,15 @@ sealed class Routes{
     @Serializable
     object VerifyEmailScreen
 
+    @Serializable
+    object MakeReportScreen
+
+    @Serializable
+    object MakeComplaintScreen
+
+    @Serializable
+    object RequestExtraServiceScreen
+
 }
 
 

@@ -1,7 +1,7 @@
 package com.example.smartwaste_user.data.models
 
 data class ReportModel(
-    val reportId: String = "",
+    var reportId: String = "",
     val userId: String = "",
     val againstDriverId: String? = null,
     val againstCollectorId: String? = null,

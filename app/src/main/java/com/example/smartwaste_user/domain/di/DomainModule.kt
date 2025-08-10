@@ -1,10 +1,12 @@
 package com.example.smartwaste_user.domain.di
 
 import com.example.smartwaste_user.data.repoimpl.AuthRepositryImpl
+import com.example.smartwaste_user.data.repoimpl.reportrepoimpl.ReportRepositryImpl
 import com.example.smartwaste_user.data.repoimpl.routeprogressimpl.RouteProgressRepositryImpl
 import com.example.smartwaste_user.data.repoimpl.routerepoimpl.RouteRepositryImpl
 import com.example.smartwaste_user.data.repoimpl.userrepoimpl.UserRepositryImpl
 import com.example.smartwaste_user.domain.repo.auth.AuthRepositry
+import com.example.smartwaste_user.domain.repo.reportrepo.ReportRepositry
 import com.example.smartwaste_user.domain.repo.routeprogressmodel.RouteProgressRepositry
 import com.example.smartwaste_user.domain.repo.routerepo.RouteRepositry
 import com.example.smartwaste_user.domain.repo.userrepo.UserRepositry
@@ -35,5 +37,9 @@ abstract class DomainModule{
     @Singleton
     @Binds
     abstract fun bindRouteRepositry(routeProgressRepositryImpl: RouteRepositryImpl) : RouteRepositry
+
+    @Singleton
+    @Binds
+    abstract fun bindReportRepositry(reportRepositryImpl: ReportRepositryImpl) : ReportRepositry
 
 }

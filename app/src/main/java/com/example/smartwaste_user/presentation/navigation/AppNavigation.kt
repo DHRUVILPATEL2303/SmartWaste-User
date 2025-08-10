@@ -38,6 +38,8 @@ import com.example.smartwaste_user.presentation.screens.Auth.LoginScreenUI
 import com.example.smartwaste_user.presentation.screens.OnBoarding.OnBoardingScreenUI
 import com.example.smartwaste_user.presentation.screens.Auth.SignUpScreenUI
 import com.example.smartwaste_user.presentation.screens.home.HomeScreenUI
+import com.example.smartwaste_user.presentation.screens.reportscreens.MakeReportScreenUI
+import com.example.smartwaste_user.presentation.screens.reportscreens.ReportScreenUI
 import com.example.smartwaste_user.presentation.screens.verificationScreens.VerificationScreenUI
 import com.example.smartwaste_user.presentation.viewmodels.AuthViewModel
 import com.example.smartwaste_user.presentation.viewmodels.OnboardingViewModel
@@ -175,13 +177,15 @@ fun AppNavigation(
                     HomeScreenUI(navController)
                 }
                 composable<Routes.ReportScreen> {
-                    ReportScreenUI(navController)
+                    ReportScreenUI(navController=navController)
                 }
                 composable<Routes.NotificationScreen> {
                     NotificationScreenUI(navController)
                 }
                 composable<Routes.ProfileScreen> {
                     ProfileScreenUI(navController)
+                }
+                composable<Routes.MakeReportScreen> { MakeReportScreenUI(navController=navController)
                 }
             }
             navigation<SubNavigation.VerifyEmailRoutes>(startDestination = Routes.VerifyEmailScreen) {
@@ -203,10 +207,7 @@ fun NotificationScreenUI(navController: NavHostController) {
 
 }
 
-@Composable
-fun ReportScreenUI(navController: NavHostController) {
 
-}
 
 
 

@@ -27,9 +27,7 @@ class RouteRepositryImpl @Inject constructor(
                     trySend(ResultState.Success(routes))
                 }
             }
-            awaitClose {
-                close()
-            }
+
         } catch (e: Exception) {
             trySend(ResultState.Error(e.message ?: "Unknown error"))
 
