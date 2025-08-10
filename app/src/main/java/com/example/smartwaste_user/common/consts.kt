@@ -5,3 +5,5 @@ const val USERS_PATH="users"
 const val ROUTE_PROGRESS_PATH="route_progress"
 
 const val REPORTS_PATH="reports"
+
+const val WORKER_FEEDBACK="worker_feedback"

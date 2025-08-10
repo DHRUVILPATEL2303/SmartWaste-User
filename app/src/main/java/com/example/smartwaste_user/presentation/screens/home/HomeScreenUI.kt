@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,23 +65,29 @@ import androidx.navigation.NavHostController
 import com.example.smartwaste_user.data.models.AreaProgress
 import com.example.smartwaste_user.data.models.RouteProgressModel
 import com.example.smartwaste_user.data.models.UserModel
+import com.example.smartwaste_user.data.models.WorkerFeedBackModel
 import com.example.smartwaste_user.presentation.viewmodels.CommonRoutesProgressState
 import com.example.smartwaste_user.presentation.viewmodels.RouteProgressViewModel
 import com.example.smartwaste_user.presentation.viewmodels.UserViewModel
+import com.example.smartwaste_user.presentation.viewmodels.WorkerFeedBackViewModel
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenUI(
     navController: NavHostController,
     userViewModel: UserViewModel = hiltViewModel<UserViewModel>(),
-    routeProgressViewModel: RouteProgressViewModel = hiltViewModel<RouteProgressViewModel>()
+    routeProgressViewModel: RouteProgressViewModel = hiltViewModel<RouteProgressViewModel>(),
+    workerFeedBackViewModel: WorkerFeedBackViewModel = hiltViewModel<WorkerFeedBackViewModel>()
 ) {
     val userState by userViewModel.userState.collectAsState()
     var showVerifyDialog by remember { mutableStateOf(false) }
     var isVerified by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         val user = FirebaseAuth.getInstance().currentUser
@@ -90,9 +97,28 @@ fun HomeScreenUI(
         routeProgressViewModel.getallRouteProgress()
     }
 
+    val feedBackState by workerFeedBackViewModel.workerFeedBackState.collectAsState()
+    LaunchedEffect(feedBackState) {
+        if (feedBackState.success != null) {
+            snackbarHostState.showSnackbar(
+                message = feedBackState.success!!,
+                duration = SnackbarDuration.Short
+            )
+        }
+        if (feedBackState.error.isNotEmpty()) {
+            snackbarHostState.showSnackbar(
+                message = "Feedback Error: ${feedBackState.error}",
+                duration = SnackbarDuration.Long
+            )
+        }
+    }
+
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            SleekHomeTopAppBar(isAreaSelected = userState.succcess?.areaId?.isNotEmpty() == true) },
+            SleekHomeTopAppBar(isAreaSelected = userState.succcess?.areaId?.isNotEmpty() == true)
+        },
     ) { padding ->
         Box(
             modifier = Modifier
@@ -116,11 +142,22 @@ fun HomeScreenUI(
                         ModernAreaSelectionScreen(
                             routeProgressState = routeProgressViewModel.routeProgressState.collectAsState().value,
                             onAreaSelected = { routeId, routeName, areaId, areaName ->
-                                userViewModel.updateUserData(user.copy(routeId = routeId, routeName = routeName, areaId = areaId, areaName = areaName))
+                                userViewModel.updateUserData(
+                                    user.copy(
+                                        routeId = routeId,
+                                        routeName = routeName,
+                                        areaId = areaId,
+                                        areaName = areaName
+                                    )
+                                )
                             }
                         )
                     } else {
-                        ModernRouteStatusScreen(user = user, routeProgressState = routeProgressViewModel.routeProgressState.collectAsState().value)
+                        ModernRouteStatusScreen(
+                            user = user,
+                            routeProgressState = routeProgressViewModel.routeProgressState.collectAsState().value,
+                            workerFeedBackViewModel = workerFeedBackViewModel
+                        )
                     }
                 }
             }
@@ -711,15 +748,21 @@ fun ModernErrorState(message: String) {
 @Composable
 fun ModernRouteStatusScreen(
     user: UserModel,
-    routeProgressState: CommonRoutesProgressState<List<RouteProgressModel>>
+    routeProgressState: CommonRoutesProgressState<List<RouteProgressModel>>,
+    workerFeedBackViewModel: WorkerFeedBackViewModel // Pass ViewModel
 ) {
     when {
         routeProgressState.isLoading -> ModernLoadingState("Loading today's route...")
         routeProgressState.error.isNotEmpty() -> ModernErrorState("Could not load route data: ${routeProgressState.error}")
         routeProgressState.succcess != null -> {
-            val route = routeProgressState.succcess!!.find { it.routeId == user.routeId }
+            val route = routeProgressState.succcess.find { it.routeId == user.routeId }
             if (route != null) {
-                ModernRouteProgressContent(user = user, route = route, areaProgressList = route.areaProgress)
+                ModernRouteProgressContent(
+                    user = user,
+                    route = route,
+                    areaProgressList = route.areaProgress,
+                    workerFeedBackViewModel = workerFeedBackViewModel
+                )
             } else {
                 ModernEmptyState(
                     title = "No Active Route",
@@ -731,13 +774,54 @@ fun ModernRouteStatusScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ModernRouteProgressContent(
     user: UserModel,
     route: RouteProgressModel,
-    areaProgressList: List<AreaProgress>
+    areaProgressList: List<AreaProgress>,
+    workerFeedBackViewModel: WorkerFeedBackViewModel
 ) {
     val currentAreaIndex = areaProgressList.indexOfFirst { !it.isCompleted }.takeIf { it != -1 } ?: areaProgressList.lastIndex
+
+    var showFeedbackSheet by remember { mutableStateOf(false) }
+    var feedbackGivenForThisSession by rememberSaveable { mutableStateOf(false) }
+    val userArea = remember(areaProgressList, user.areaId) {
+        areaProgressList.find { it.areaId == user.areaId }
+    }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(userArea?.isCompleted, feedbackGivenForThisSession) {
+        if (userArea?.isCompleted == true && !feedbackGivenForThisSession) {
+            showFeedbackSheet = true
+        }
+    }
+
+    if (showFeedbackSheet) {
+        FeedbackBottomSheet(
+            onDismiss = {
+                showFeedbackSheet = false
+                feedbackGivenForThisSession = true
+            },
+            onSubmit = { rating, improvement ->
+                val feedbackModel = WorkerFeedBackModel(
+                    feedbackId = UUID.randomUUID().toString(),
+                    driverId = route.assignedDriverId,
+                    collectorId = route.assignedCollectorId,
+                    userId = FirebaseAuth.getInstance().currentUser!!.uid,
+                    routeId = route.routeId,
+                    outOf5 = rating.toString(),
+                    feedbackDate = System.currentTimeMillis().toString(),
+                    improvement = improvement
+                )
+                workerFeedBackViewModel.giveFeedBack(feedbackModel)
+                coroutineScope.launch {
+                    showFeedbackSheet = false
+                    feedbackGivenForThisSession = true
+                }
+            }
+        )
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -1215,7 +1299,6 @@ private fun ModernEnhancedAreaCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Status icon
             val statusIcon = when {
                 area.isCompleted -> Icons.Default.CheckCircle
                 isCurrent -> Icons.Default.Schedule
@@ -1257,7 +1340,6 @@ private fun ModernEnhancedAreaCard(
                 )
             }
 
-            // Current indicator
             if (isCurrent && !area.isCompleted) {
                 val infiniteTransition = rememberInfiniteTransition(label = "pulse")
                 val alpha by infiniteTransition.animateFloat(
@@ -1529,7 +1611,7 @@ fun ModernAreaSelectionScreen(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(routeProgressState.succcess!!) { route ->
+                    items(routeProgressState.succcess) { route ->
                         ModernRouteItem(route = route, onAreaSelected = onAreaSelected)
                     }
                 }
@@ -1872,4 +1954,112 @@ fun SleekHomeTopAppBar(
             ),
         windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
     )
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FeedbackBottomSheet(
+    onDismiss: () -> Unit,
+    onSubmit: (Int, String) -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var selectedRating by remember { mutableIntStateOf(0) }
+    var improvementText by rememberSaveable { mutableStateOf("") }
+
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                "Collection Complete!",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Text(
+                "How was the service today? Please rate the collection crew.",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            StarRatingInput(
+                rating = selectedRating,
+                onRatingChanged = { selectedRating = it }
+            )
+
+            OutlinedTextField(
+                value = improvementText,
+                onValueChange = { improvementText = it },
+                label = { Text("Suggestions for improvement (optional)") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                maxLines = 3
+            )
+
+
+            Button(
+                onClick = { onSubmit(selectedRating, improvementText) },
+                enabled = selectedRating > 0,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    "Submit Feedback",
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StarRatingInput(
+    maxStars: Int = 5,
+    rating: Int,
+    onRatingChanged: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        (1..maxStars).forEach { star ->
+            val isSelected = star <= rating
+            val iconScale by animateFloatAsState(
+                targetValue = if (isSelected) 1.2f else 1.0f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                ), label = "StarScale"
+            )
+
+            IconButton(onClick = { onRatingChanged(star) }) {
+                Icon(
+                    imageVector = if (isSelected) Icons.Filled.Star else Icons.Outlined.Star,
+                    contentDescription = "Star $star",
+                    tint = if (isSelected) Color(0xFFFFC107) else MaterialTheme.colorScheme.outline,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .scale(iconScale)
+                )
+            }
+        }
+    }
 }

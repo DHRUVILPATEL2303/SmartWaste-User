@@ -5,11 +5,13 @@ import com.example.smartwaste_user.data.repoimpl.reportrepoimpl.ReportRepositryI
 import com.example.smartwaste_user.data.repoimpl.routeprogressimpl.RouteProgressRepositryImpl
 import com.example.smartwaste_user.data.repoimpl.routerepoimpl.RouteRepositryImpl
 import com.example.smartwaste_user.data.repoimpl.userrepoimpl.UserRepositryImpl
+import com.example.smartwaste_user.data.repoimpl.workerfeedbackrepoimpl.WorkerFeedBackRepositryImpl
 import com.example.smartwaste_user.domain.repo.auth.AuthRepositry
 import com.example.smartwaste_user.domain.repo.reportrepo.ReportRepositry
 import com.example.smartwaste_user.domain.repo.routeprogressmodel.RouteProgressRepositry
 import com.example.smartwaste_user.domain.repo.routerepo.RouteRepositry
 import com.example.smartwaste_user.domain.repo.userrepo.UserRepositry
+import com.example.smartwaste_user.domain.repo.workerfedbackrepo.WorkerFeedBackRepositry
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,5 +43,9 @@ abstract class DomainModule{
     @Singleton
     @Binds
     abstract fun bindReportRepositry(reportRepositryImpl: ReportRepositryImpl) : ReportRepositry
+
+    @Singleton
+    @Binds
+    abstract fun bindWorkerFeedBackRepositry(RepositryImpl: WorkerFeedBackRepositryImpl) : WorkerFeedBackRepositry
 
 }
