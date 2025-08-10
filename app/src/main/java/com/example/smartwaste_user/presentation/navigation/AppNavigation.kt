@@ -99,11 +99,11 @@ fun AppNavigation(
                 AnimatedBottomBar(
                     selectedItem = selectedItem,
                     itemSize = bottomBarItems.size,
-                    containerColor = Color(46, 60, 74).copy(alpha = 0.6f),
+                    containerColor = Color(18, 19, 20, 255).copy(alpha = 0.9f),
                     indicatorStyle = IndicatorStyle.FILLED,
                     containerShape = RoundedCornerShape(50.dp),
                     bottomBarHeight = 65.dp,
-                    modifier = Modifier.padding(16.dp).navigationBarsPadding(),
+                    modifier = Modifier.navigationBarsPadding().padding(start = 16.dp, end = 16.dp),
                     indicatorColor = Color.White.copy(alpha = 0.4f),
                     indicatorDirection = IndicatorDirection.BOTTOM
                 ) {

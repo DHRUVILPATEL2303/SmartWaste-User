@@ -1,13 +1,15 @@
 package com.example.smartwaste_user.data.models
 
 data class ReportModel(
-    val reportId:String="",
-    val userId:String="",
-    val againstDriverId : String="",
-    val againstCollectorId : String="",
-    val routeId:String="",
-    val areaId: String="",
-    val status:String="",
-    val areaName: String="",
-    val reportDate:String=""
+    val reportId: String = "",
+    val userId: String = "",
+    val againstDriverId: String? = null,
+    val againstCollectorId: String? = null,
+    val routeId: String = "",
+    val areaId: String = "",
+    val areaName: String = "",
+    val description: String = "",
+    val attachments: List<String> = emptyList(),
+    val status: String = "Pending",
+    val reportDate: String = ""
 )
