@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
     implementation(libs.play.services.auth)
+    implementation(libs.androidx.compose.material)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -95,6 +96,8 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.7")
     // In build.gradle (module)
     implementation("androidx.compose.foundation:foundation:1.6.0")
+
+// or latest version
 
 //    implementation("androidx.core:core-splashscreen:1.0.1")
 

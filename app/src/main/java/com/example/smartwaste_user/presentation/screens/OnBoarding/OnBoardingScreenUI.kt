@@ -51,8 +51,8 @@ fun OnBoardingScreenUI(navController: NavController,viewModel: OnboardingViewMod
     )
 
     val gradientColors = listOf(
-        Color(0xFF0C180D),  // Top: Vibrant Green
-        Color(0xFF1E3A1F),  // Middle: Forest Green
+        Color(0xFF0C180D),
+        Color(0xFF1E3A1F),
         Color(0xFF498349)
     )
 

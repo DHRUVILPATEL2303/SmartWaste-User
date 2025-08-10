@@ -154,7 +154,7 @@ fun AppNavigation(
             navController = navController,
             startDestination = startDestination,
             modifier = Modifier
-                .padding(paddingValues)
+//                .padding(paddingValues)
                 .fillMaxSize()
         ) {
             navigation<SubNavigation.OnBoardingScreen>(startDestination = Routes.OnBoardingScreen) {

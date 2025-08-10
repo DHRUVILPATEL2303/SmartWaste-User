@@ -6,5 +6,9 @@ data class UserModel(
     val name:String="",
     val address : String="",
     val phoneNumber : String="",
-    val profileImageUrl: String=""
+    val profileImageUrl: String="",
+    val areaName:String="",
+    val areaId:String="",
+    val routeId:String="",
+    val routeName:String="",
 )
