@@ -1,17 +1,24 @@
 package com.example.smartwaste_user.presentation.viewmodels
 
+import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smartwaste_user.common.ResultState
 import com.example.smartwaste_user.data.models.UserModel
 import com.example.smartwaste_user.domain.usecase.userusecase.GetUserDetailsUseCase
 import com.example.smartwaste_user.domain.usecase.userusecase.UpdateUserDetailsUseCase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.MultiFormatWriter
+import com.google.zxing.common.BitMatrix
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
 
 
 @HiltViewModel
@@ -27,8 +34,12 @@ class UserViewModel @Inject constructor(
     val updateState = _updateState.asStateFlow()
 
 
+    private val _qrCodeBitmap = MutableStateFlow<Bitmap?>(null)
+    val qrCodeBitmap = _qrCodeBitmap.asStateFlow()
+
     init {
         getUserData()
+        generateUserQRCode()
     }
 
     fun getUserData() {
@@ -81,6 +92,25 @@ class UserViewModel @Inject constructor(
             }
         }
 
+    }
+
+    private fun generateUserQRCode() {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        _qrCodeBitmap.value = generateQRCode(uid)
+    }
+
+    private fun generateQRCode(content: String, width: Int = 512, height: Int = 512): Bitmap {
+        val bitMatrix: BitMatrix =
+            MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, width, height)
+        val bitmap = createBitmap(width, height, Bitmap.Config.RGB_565)
+
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                bitmap[x, y] =
+                    if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+            }
+        }
+        return bitmap
     }
 
 

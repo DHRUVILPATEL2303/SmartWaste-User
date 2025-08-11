@@ -38,6 +38,7 @@ import com.example.smartwaste_user.presentation.screens.Auth.LoginScreenUI
 import com.example.smartwaste_user.presentation.screens.OnBoarding.OnBoardingScreenUI
 import com.example.smartwaste_user.presentation.screens.Auth.SignUpScreenUI
 import com.example.smartwaste_user.presentation.screens.home.HomeScreenUI
+import com.example.smartwaste_user.presentation.screens.profile.ProfileScreenUI
 import com.example.smartwaste_user.presentation.screens.reportscreens.MakeReportScreenUI
 import com.example.smartwaste_user.presentation.screens.reportscreens.ReportScreenUI
 import com.example.smartwaste_user.presentation.screens.verificationScreens.VerificationScreenUI
@@ -183,7 +184,7 @@ fun AppNavigation(
                     NotificationScreenUI(navController)
                 }
                 composable<Routes.ProfileScreen> {
-                    ProfileScreenUI(navController)
+                    ProfileScreenUI(navController=navController)
                 }
                 composable<Routes.MakeReportScreen> { MakeReportScreenUI(navController=navController)
                 }
@@ -197,10 +198,7 @@ fun AppNavigation(
     }
 }
 
-@Composable
-fun ProfileScreenUI(navController: NavHostController) {
 
-}
 
 @Composable
 fun NotificationScreenUI(navController: NavHostController) {

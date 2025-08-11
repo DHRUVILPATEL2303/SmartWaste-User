@@ -104,4 +104,7 @@ dependencies {
     implementation ("com.canopas.compose-animated-navigationbar:bottombar:1.0.1")
 
     implementation("androidx.compose.material:material-icons-extended-android:1.7.8")
+
+
+    implementation("com.google.zxing:core:3.5.3")
 }

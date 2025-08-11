@@ -11,4 +11,5 @@ data class UserModel(
     val areaId:String="",
     val routeId:String="",
     val routeName:String="",
+    val totalPoints : String=""
 )
