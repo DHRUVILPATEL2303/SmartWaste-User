@@ -63,11 +63,32 @@ class AuthRepositryImpl @Inject constructor(
     override suspend fun firebaseSignInWithGoogle(idToken: String): ResultState<FirebaseUser> {
         return try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
-            firebaseAuth.signInWithCredential(credential).await()
-            ResultState.Success(firebaseAuth.currentUser!!)
+            val authResult = firebaseAuth.signInWithCredential(credential).await()
+            val firebaseUser = authResult.user ?: return ResultState.Error("Google sign-in failed")
 
+            val userDocRef = firebaseFirestore.collection(USERS_PATH).document(firebaseUser.uid)
+
+            val snapshot = userDocRef.get().await()
+            if (!snapshot.exists()) {
+                val userModel = UserModel(
+                    userId = firebaseUser.uid,
+                    name = firebaseUser.displayName ?: "",
+                    email = firebaseUser.email ?: "",
+                    profileImageUrl = firebaseUser.photoUrl?.toString() ?: "",
+                    phoneNumber = firebaseUser.phoneNumber?.toString() ?:"",
+                    address ="",
+                    areaName = "",
+                    routeName = "",
+                    totalPoints = "0",
+                    routeId = ""
+                )
+
+                userDocRef.set(userModel).await()
+            }
+
+            ResultState.Success(firebaseUser)
         } catch (e: Exception) {
-            ResultState.Error(e.localizedMessage.toString())
+            ResultState.Error(e.localizedMessage ?: "Unknown error occurred")
         }
     }
 }
