@@ -188,6 +188,10 @@ fun AppNavigation(
                 }
                 composable<Routes.MakeReportScreen> { MakeReportScreenUI(navController=navController)
                 }
+
+                composable<Routes.RequestExtraServiceScreen> {
+
+                }
             }
             navigation<SubNavigation.VerifyEmailRoutes>(startDestination = Routes.VerifyEmailScreen) {
                 composable<Routes.VerifyEmailScreen> {

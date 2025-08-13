@@ -85,7 +85,10 @@ fun ReportScreenUI(
                         navController.navigate(Routes.MakeReportScreen)
                     },
                     onMakeComplaintClick = { /* Navigate to make complaint screen */ },
-                    onExtraServiceClick = { /* Navigate to extra service screen */ }
+                    onExtraServiceClick = {
+                        navController.navigate(Routes.RequestExtraServiceScreen)
+
+                    }
                 )
             }
 
