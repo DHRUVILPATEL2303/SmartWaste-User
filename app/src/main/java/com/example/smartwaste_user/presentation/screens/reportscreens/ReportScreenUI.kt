@@ -72,7 +72,8 @@ fun ReportScreenUI(
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
-            }
+            },
+            modifier = Modifier.clip(RoundedCornerShape(20.dp))
         )
 
         LazyColumn(
@@ -228,8 +229,7 @@ private fun ReportItem(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                StatusChip(status = report.status)
+            ) {StatusChip(status = report.status)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.CalendarToday,
@@ -325,30 +325,30 @@ fun AttachmentThumbnail(attachmentUriString: String) {
 }
 
 
-@Composable
-private fun StatusChip(status: String) {
-    val (backgroundColor, textColor) = when (status.lowercase()) {
-        "pending" -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
-        "approved", "completed" -> Color(0xFFD1E7DD) to Color(0xFF0F5132)
-        "rejected" -> Color(0xFFF8D7DA) to Color(0xFF721C24)
-        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(backgroundColor)
-            .padding(horizontal = 10.dp, vertical = 4.dp)
-    ) {
-        Text(
-            text = status.uppercase(),
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = textColor,
-            letterSpacing = 0.5.sp
-        )
-    }
-}
+//@Composable
+//private fun StatusChip(status: String) {
+//    val (backgroundColor, textColor) = when (status.lowercase()) {
+//        "pending" -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+//        "approved", "completed" -> Color(0xFFD1E7DD) to Color(0xFF0F5132)
+//        "rejected" -> Color(0xFFF8D7DA) to Color(0xFF721C24)
+//        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+//    }
+//
+//    Box(
+//        modifier = Modifier
+//            .clip(RoundedCornerShape(8.dp))
+//            .background(backgroundColor)
+//            .padding(horizontal = 10.dp, vertical = 4.dp)
+//    ) {
+//        Text(
+//            text = status.uppercase(),
+//            fontSize = 10.sp,
+//            fontWeight = FontWeight.Bold,
+//            color = textColor,
+//            letterSpacing = 0.5.sp
+//        )
+//    }
+//}
 
 @Composable
 private fun LoadingContent() {
