@@ -66,7 +66,6 @@ fun NotificationScreenUI(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                // Header Section
                 Surface(
                     shape = RoundedCornerShape(28.dp),
                     color = Color(40, 40, 40, 240),
@@ -120,7 +119,6 @@ fun NotificationScreenUI(
             }
 
             item {
-                // Holidays Section Header
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
