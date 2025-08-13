@@ -8,12 +8,23 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.EaseInOutCubic
+import androidx.compose.animation.core.EaseOutBack
+import androidx.compose.animation.core.EaseInBack
+import androidx.compose.animation.core.EaseInCubic
+import androidx.compose.animation.core.EaseInExpo
+import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.EaseOutExpo
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +63,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +71,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
@@ -76,6 +89,7 @@ import com.example.smartwaste_user.presentation.screens.Auth.LoginScreenUI
 import com.example.smartwaste_user.presentation.screens.OnBoarding.OnBoardingScreenUI
 import com.example.smartwaste_user.presentation.screens.Auth.SignUpScreenUI
 import com.example.smartwaste_user.presentation.screens.home.HomeScreenUI
+import com.example.smartwaste_user.presentation.screens.notification.NotificationScreenUI
 import com.example.smartwaste_user.presentation.screens.profile.ProfileScreenUI
 import com.example.smartwaste_user.presentation.screens.reportscreens.ExtraServiceScreen
 import com.example.smartwaste_user.presentation.screens.reportscreens.MakeReportScreenUI
@@ -85,6 +99,7 @@ import com.example.smartwaste_user.presentation.viewmodels.AuthViewModel
 import com.example.smartwaste_user.presentation.viewmodels.OnboardingViewModel
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 data class BottomBarItem(
     val name: String,
@@ -140,16 +155,40 @@ fun AppNavigation(
             AnimatedVisibility(
                 visible = currentBaseRoute in bottomBarRoutes,
                 enter = fadeIn(
-                    animationSpec = tween(durationMillis = 400)
+                    animationSpec = tween(
+                        durationMillis = 600,
+                        easing = EaseInOutCubic
+                    )
                 ) + slideInVertically(
-                    animationSpec = tween(durationMillis = 400),
+                    animationSpec = tween(
+                        durationMillis = 600,
+                        easing = EaseOutBack
+                    ),
                     initialOffsetY = { it }
+                ) + scaleIn(
+                    animationSpec = tween(
+                        durationMillis = 600,
+                        easing = EaseOutBack
+                    ),
+                    initialScale = 0.8f
                 ),
                 exit = fadeOut(
-                    animationSpec = tween(durationMillis = 300)
+                    animationSpec = tween(
+                        durationMillis = 400,
+                        easing = EaseInOutCubic
+                    )
                 ) + slideOutVertically(
-                    animationSpec = tween(durationMillis = 300),
+                    animationSpec = tween(
+                        durationMillis = 400,
+                        easing = EaseInBack
+                    ),
                     targetOffsetY = { it }
+                ) + scaleOut(
+                    animationSpec = tween(
+                        durationMillis = 400,
+                        easing = EaseInBack
+                    ),
+                    targetScale = 0.8f
                 )
             ) {
                 ProfessionalBottomBar(
@@ -191,24 +230,67 @@ fun AppNavigation(
         NavHost(
             navController = navController,
             startDestination = startDestination,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+             ,
             enterTransition = {
-                fadeIn(
-                    animationSpec = tween(durationMillis = 400)
-                ) + slideInHorizontally(
-                    animationSpec = tween(durationMillis = 400),
-                    initialOffsetX = { it / 3 }
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ) + fadeIn(
+                    animationSpec = tween(
+                        durationMillis = 400,
+                        easing = FastOutSlowInEasing
+                    )
                 )
             },
             exitTransition = {
-                fadeOut(
-                    animationSpec = tween(durationMillis = 300)
-                ) + slideOutHorizontally(
-                    animationSpec = tween(durationMillis = 300),
-                    targetOffsetX = { -it / 3 }
+                slideOutHorizontally(
+                    targetOffsetX = { -it / 2 },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ) + fadeOut(
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = LinearOutSlowInEasing
+                    )
+                )
+            },
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { -it },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ) + fadeIn(
+                    animationSpec = tween(
+                        durationMillis = 400,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ) + fadeOut(
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = LinearOutSlowInEasing
+                    )
                 )
             }
         ) {
+            // Navigation graph remains the same
             navigation<SubNavigation.OnBoardingScreen>(startDestination = Routes.OnBoardingScreen) {
                 composable<Routes.OnBoardingScreen> {
                     OnBoardingScreenUI(navController)
@@ -227,19 +309,19 @@ fun AppNavigation(
                     HomeScreenUI(navController)
                 }
                 composable<Routes.ReportScreen> {
-                    ReportScreenUI(navController=navController)
+                    ReportScreenUI(navController = navController)
                 }
                 composable<Routes.NotificationScreen> {
                     NotificationScreenUI(navController)
                 }
                 composable<Routes.ProfileScreen> {
-                    ProfileScreenUI(navController=navController)
+                    ProfileScreenUI(navController = navController)
                 }
                 composable<Routes.MakeReportScreen> {
-                    MakeReportScreenUI(navController=navController)
+                    MakeReportScreenUI(navController = navController)
                 }
                 composable<Routes.RequestExtraServiceScreen> {
-                    ExtraServiceScreen(navController=navController)
+                    ExtraServiceScreen(navController = navController)
                 }
             }
             navigation<SubNavigation.VerifyEmailRoutes>(startDestination = Routes.VerifyEmailScreen) {
@@ -258,55 +340,75 @@ fun ProfessionalBottomBar(
     onItemSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val barScale = remember { Animatable(0f) }
     val barAlpha = remember { Animatable(0f) }
+    val barTranslationY = remember { Animatable(20f) }
 
     LaunchedEffect(Unit) {
-        barAlpha.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 500)
-        )
-
-        barScale.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMedium
+        launch {
+            barAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(
+                    durationMillis = 500,
+                    easing = FastOutSlowInEasing
+                )
             )
-        )
+        }
+        launch {
+            barTranslationY.animateTo(
+                targetValue = 0f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            )
+        }
     }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 16.dp)
-            .scale(barScale.value)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .alpha(barAlpha.value)
+            .offset(y = barTranslationY.value.dp)
     ) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(78.dp),
-            shape = RoundedCornerShape(34.dp),
+                .height(70.dp),
+            shape = RoundedCornerShape(24.dp),
             shadowElevation = 8.dp,
-            color = Color(33, 32, 33, 255),
+            color = Color(0xFF1C1C1E), // Dark background for contrast
             tonalElevation = 6.dp
         ) {
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                items.forEachIndexed { index, item ->
-                    ProfessionalBottomBarItem(
-                        item = item,
-                        isSelected = selectedItem == index,
-                        onClick = { onItemSelected(index) },
-                        animationDelay = index * 100L
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF1C1C1E),
+                                Color(0xFF2D2D2F)
+                            )
+                        ),
+                        shape = RoundedCornerShape(24.dp)
                     )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    items.forEachIndexed { index, item ->
+                        ProfessionalBottomBarItem(
+                            item = item,
+                            isSelected = selectedItem == index,
+                            onClick = { onItemSelected(index) },
+                            animationDelay = index * 50L
+                        )
+                    }
                 }
             }
         }
@@ -320,36 +422,33 @@ fun ProfessionalBottomBarItem(
     onClick: () -> Unit,
     animationDelay: Long = 0L
 ) {
-    val scale by animateFloatAsState(
+    val scale = animateFloatAsState(
         targetValue = if (isSelected) 1.15f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow
         ),
         label = "item_scale"
     )
 
-    val backgroundAlpha by animateFloatAsState(
-        targetValue = if (isSelected) 1f else 0f,
-        animationSpec = tween(300),
-        label = "background_alpha"
+    val iconAlpha = animateFloatAsState(
+        targetValue = if (isSelected) 1f else 0.6f,
+        animationSpec = tween(
+            durationMillis = 300,
+            easing = FastOutSlowInEasing
+        ),
+        label = "icon_alpha"
     )
 
     val itemAlpha = remember { Animatable(0f) }
-    val itemScale = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
         delay(animationDelay)
         itemAlpha.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 400)
-        )
-
-        itemScale.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMedium
+            animationSpec = tween(
+                durationMillis = 400,
+                easing = FastOutSlowInEasing
             )
         )
     }
@@ -357,35 +456,37 @@ fun ProfessionalBottomBarItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .scale(scale)
-            .scale(itemScale.value)
+            .scale(scale.value)
             .alpha(itemAlpha.value)
     ) {
         IconButton(
             onClick = onClick,
-            modifier = Modifier.size(52.dp)
+            modifier = Modifier.size(50.dp)
         ) {
             Box(
                 modifier = Modifier
                     .size(44.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(
-                        color = if (isSelected) {
-                            item.color.copy(alpha = 0.15f)
+                        brush = if (isSelected) {
+                            Brush.radialGradient(
+                                colors = listOf(
+                                    item.color.copy(alpha = 0.2f),
+                                    Color.Transparent
+                                )
+                            )
                         } else {
-                            Color.Transparent
-                        },
-                        shape = RoundedCornerShape(16.dp)
+                            Brush.radialGradient(
+                                colors = listOf(Color.Transparent, Color.Transparent)
+                            )
+                        }
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                     contentDescription = item.name,
-                    tint = if (isSelected) {
-                        item.color
-                    } else {
-                        Color.White.copy(alpha = 0.7f)
-                    },
+                    tint = if (isSelected) item.color else Color.White.copy(alpha = iconAlpha.value),
                     modifier = Modifier.size(26.dp)
                 )
             }
@@ -394,125 +495,26 @@ fun ProfessionalBottomBarItem(
         AnimatedVisibility(
             visible = isSelected,
             enter = fadeIn(
-                animationSpec = tween(durationMillis = 300)
+                animationSpec = tween(300, easing = FastOutSlowInEasing)
             ) + slideInVertically(
-                animationSpec = tween(durationMillis = 300),
+                animationSpec = tween(300, easing = FastOutSlowInEasing),
                 initialOffsetY = { it / 2 }
             ),
             exit = fadeOut(
-                animationSpec = tween(durationMillis = 200)
+                animationSpec = tween(200, easing = LinearOutSlowInEasing)
             ) + slideOutVertically(
-                animationSpec = tween(durationMillis = 200),
+                animationSpec = tween(200, easing = LinearOutSlowInEasing),
                 targetOffsetY = { it / 2 }
             )
         ) {
             Text(
                 text = item.name,
                 fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Medium,
                 color = item.color,
-                modifier = Modifier.offset(y = (-6).dp)
+                modifier = Modifier.offset(y = (-4).dp),
+                letterSpacing = 0.4.sp
             )
-        }
-    }
-}
-
-@Composable
-fun NotificationScreenUI(navController: NavHostController) {
-    val containerAlpha = remember { Animatable(0f) }
-    val containerScale = remember { Animatable(0.8f) }
-    val iconScale = remember { Animatable(0f) }
-    val textAlpha = remember { Animatable(0f) }
-
-    LaunchedEffect(Unit) {
-        containerAlpha.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 500)
-        )
-
-        containerScale.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMedium
-            )
-        )
-
-        delay(200L)
-        iconScale.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-        )
-
-        delay(300L)
-        textAlpha.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 600)
-        )
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF2B432C)),
-        contentAlignment = Alignment.Center
-    ) {
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = Color(40, 40, 40, 240),
-            shadowElevation = 12.dp,
-            tonalElevation = 6.dp,
-            modifier = Modifier
-                .padding(24.dp)
-                .scale(containerScale.value)
-                .alpha(containerAlpha.value)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(40.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(88.dp)
-                        .scale(iconScale.value)
-                        .background(
-                            color = Color(0xFFFF9800).copy(alpha = 0.15f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications",
-                        tint = Color(0xFFFF9800),
-                        modifier = Modifier.size(44.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Text(
-                    text = "Notifications",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.alpha(textAlpha.value)
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Stay updated with latest alerts and updates",
-                    fontSize = 15.sp,
-                    color = Color.White.copy(alpha = 0.8f),
-                    lineHeight = 20.sp,
-                    modifier = Modifier.alpha(textAlpha.value)
-                )
-            }
         }
     }
 }
