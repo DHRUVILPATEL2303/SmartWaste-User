@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.smartwaste_user.datastore.DataStoreManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,6 +37,13 @@ object DataModule {
     @Singleton
     fun provideDataStoreManager(@ApplicationContext context: Context): DataStoreManager {
         return DataStoreManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCloudMessaging() : FirebaseMessaging {
+        return FirebaseMessaging.getInstance()
+
     }
 
 }

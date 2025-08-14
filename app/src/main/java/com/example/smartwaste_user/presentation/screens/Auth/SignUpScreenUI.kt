@@ -1,5 +1,10 @@
 package com.example.smartwaste_user.presentation.screens.Auth
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,12 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.smartwaste_user.R
 import com.example.smartwaste_user.data.models.UserModel
 import com.example.smartwaste_user.presentation.navigation.Routes
 import com.example.smartwaste_user.presentation.viewmodels.AuthViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +45,36 @@ fun SignUpScreenUI(viewModel: AuthViewModel = hiltViewModel<AuthViewModel>(), na
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     val state = viewModel.signUpState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+
+
+    val postNotificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (!isGranted) {
+
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("Notification permission denied. You might miss important updates.")
+                }
+            }
+        }
+    )
+
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val permissionStatus = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+            if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
+                postNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+
 
     LaunchedEffect(state.value.success) {
         state.value.success?.let {
@@ -188,6 +225,10 @@ fun SignUpScreenUI(viewModel: AuthViewModel = hiltViewModel<AuthViewModel>(), na
                                         profileImageUrl = ""
                                     )
                                     viewModel.signUpUser(password, userModel)
+                                } else {
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar("Passwords do not match.")
+                                    }
                                 }
                             },
                             modifier = Modifier
