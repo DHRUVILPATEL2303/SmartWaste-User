@@ -101,7 +101,7 @@ dependencies {
 
 // or latest version
 
-//    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     implementation ("com.canopas.compose-animated-navigationbar:bottombar:1.0.1")
 
@@ -109,4 +109,6 @@ dependencies {
 
 
     implementation("com.google.zxing:core:3.5.3")
+
+
 }

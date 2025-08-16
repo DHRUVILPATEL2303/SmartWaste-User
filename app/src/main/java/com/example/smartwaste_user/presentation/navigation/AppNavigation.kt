@@ -1,47 +1,34 @@
 package com.example.smartwaste_user.presentation.navigation
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.EaseInOutCubic
-import androidx.compose.animation.core.EaseOutBack
-import androidx.compose.animation.core.EaseInBack
-import androidx.compose.animation.core.EaseInCubic
-import androidx.compose.animation.core.EaseInExpo
-import androidx.compose.animation.core.EaseOutCubic
-import androidx.compose.animation.core.EaseOutExpo
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ClearAll
@@ -52,34 +39,25 @@ import androidx.compose.material.icons.outlined.ClearAll
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -98,29 +76,29 @@ import com.example.smartwaste_user.presentation.screens.verificationScreens.Veri
 import com.example.smartwaste_user.presentation.viewmodels.AuthViewModel
 import com.example.smartwaste_user.presentation.viewmodels.OnboardingViewModel
 import com.google.firebase.auth.FirebaseUser
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import androidx.compose.animation.core.EaseInOutCubic
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.navigationBarsPadding
+
+const val PAGE_TRANSITION_DURATION = 400
+const val BOTTOM_BAR_ANIM_DURATION = 500
 
 data class BottomBarItem(
     val name: String,
+    val route: String,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
-    val color: Color = Color(0xFF2196F3)
+    val color: Color
 )
 
 val bottomBarItems = listOf(
-    BottomBarItem("Home", Icons.Filled.Home, Icons.Outlined.Home, Color(0xFF2196F3)),
-    BottomBarItem("Report", Icons.Filled.ClearAll, Icons.Outlined.ClearAll, Color(0xFF4CAF50)),
-    BottomBarItem("Notify", Icons.Filled.Notifications, Icons.Outlined.Notifications, Color(0xFFFF9800)),
-    BottomBarItem("Profile", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle, Color(0xFF9C27B0)),
+    BottomBarItem("Home", Routes.HomeScreen::class.qualifiedName!!, Icons.Filled.Home, Icons.Outlined.Home, Color(0xFF2196F3)),
+    BottomBarItem("Report", Routes.ReportScreen::class.qualifiedName!!, Icons.Filled.ClearAll, Icons.Outlined.ClearAll, Color(0xFF4CAF50)),
+    BottomBarItem("Notify", Routes.NotificationScreen::class.qualifiedName!!, Icons.Filled.Notifications, Icons.Outlined.Notifications, Color(0xFFFF9800)),
+    BottomBarItem("Profile", Routes.ProfileScreen::class.qualifiedName!!, Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle, Color(0xFF9C27B0)),
 )
-
-val bottomBarRoutes = listOf(
-    Routes.HomeScreen::class.qualifiedName,
-    Routes.ReportScreen::class.qualifiedName,
-    Routes.NotificationScreen::class.qualifiedName,
-    Routes.ProfileScreen::class.qualifiedName,
-)
+private val bottomBarRoutes = bottomBarItems.map { it.route }
 
 @Composable
 fun AppNavigation(
@@ -135,7 +113,7 @@ fun AppNavigation(
     val startDestination = when {
         shouldShowOnboarding -> SubNavigation.OnBoardingScreen
         currentUser == null -> SubNavigation.AuthRoutes
-        currentUser.isEmailVerified-> SubNavigation.HomeRoutes
+        currentUser.isEmailVerified -> SubNavigation.HomeRoutes
         !currentUser.isEmailVerified -> SubNavigation.VerifyEmailRoutes
         else -> SubNavigation.VerifyEmailRoutes
     }
@@ -146,67 +124,33 @@ fun AppNavigation(
     val currentRoute = navBackStackEntry?.destination?.route
     val currentBaseRoute = currentRoute?.substringBefore("?")?.substringBefore("/")
 
-    var selectedItem by remember { mutableIntStateOf(0) }
-    val currentIndex = bottomBarRoutes.indexOf(currentBaseRoute)
-    if (currentIndex != -1) selectedItem = currentIndex
+    var selectedItemIndex by remember { mutableIntStateOf(0) }
+    val currentIndex = bottomBarItems.indexOfFirst { it.route == currentBaseRoute }
+    if (currentIndex != -1) {
+        selectedItemIndex = currentIndex
+    }
 
     Scaffold(
         bottomBar = {
             AnimatedVisibility(
                 visible = currentBaseRoute in bottomBarRoutes,
-                enter = fadeIn(
-                    animationSpec = tween(
-                        durationMillis = 600,
-                        easing = EaseInOutCubic
-                    )
-                ) + slideInVertically(
-                    animationSpec = tween(
-                        durationMillis = 600,
-                        easing = EaseOutBack
-                    ),
-                    initialOffsetY = { it }
-                ) + scaleIn(
-                    animationSpec = tween(
-                        durationMillis = 600,
-                        easing = EaseOutBack
-                    ),
-                    initialScale = 0.8f
-                ),
-                exit = fadeOut(
-                    animationSpec = tween(
-                        durationMillis = 400,
-                        easing = EaseInOutCubic
-                    )
-                ) + slideOutVertically(
-                    animationSpec = tween(
-                        durationMillis = 400,
-                        easing = EaseInBack
-                    ),
-                    targetOffsetY = { it }
-                ) + scaleOut(
-                    animationSpec = tween(
-                        durationMillis = 400,
-                        easing = EaseInBack
-                    ),
-                    targetScale = 0.8f
-                )
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(durationMillis = BOTTOM_BAR_ANIM_DURATION, easing = EaseInOutCubic)
+                ) + fadeIn(animationSpec = tween(durationMillis = BOTTOM_BAR_ANIM_DURATION)),
+                exit = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(durationMillis = BOTTOM_BAR_ANIM_DURATION, easing = EaseInOutCubic)
+                ) + fadeOut(animationSpec = tween(durationMillis = BOTTOM_BAR_ANIM_DURATION))
             ) {
-                ProfessionalBottomBar(
-                    selectedItem = selectedItem,
+                SmoothBottomBar(
+                    selectedItemIndex = selectedItemIndex,
                     items = bottomBarItems,
                     onItemSelected = { index ->
-                        if (selectedItem != index) {
-                            selectedItem = index
-                            val route = when (index) {
-                                0 -> Routes.HomeScreen
-                                1 -> Routes.ReportScreen
-                                2 -> Routes.NotificationScreen
-                                3 -> Routes.ProfileScreen
-                                else -> Routes.HomeScreen
-                            }
-                            navController.navigate(route) {
+                        if (selectedItemIndex != index) {
+                            selectedItemIndex = index
+                            navController.navigate(bottomBarItems[index].route) {
                                 popUpTo(Routes.HomeScreen) {
-                                    inclusive = false
                                     saveState = true
                                 }
                                 launchSingleTop = true
@@ -224,191 +168,123 @@ fun AppNavigation(
                 popUpTo(Routes.HomeScreen) { inclusive = false }
                 launchSingleTop = true
             }
-            selectedItem = 0
+            selectedItemIndex = 0
         }
 
         NavHost(
             navController = navController,
             startDestination = startDestination,
-            modifier = Modifier
-                .fillMaxSize()
-             ,
+
             enterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { it },
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                ) + fadeIn(
-                    animationSpec = tween(
-                        durationMillis = 400,
-                        easing = FastOutSlowInEasing
-                    )
-                )
+                    animationSpec = tween(PAGE_TRANSITION_DURATION, easing = EaseInOutCubic)
+                ) + fadeIn(tween(PAGE_TRANSITION_DURATION))
             },
             exitTransition = {
                 slideOutHorizontally(
-                    targetOffsetX = { -it / 2 },
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                ) + fadeOut(
-                    animationSpec = tween(
-                        durationMillis = 300,
-                        easing = LinearOutSlowInEasing
-                    )
-                )
+                    targetOffsetX = { -it },
+                    animationSpec = tween(PAGE_TRANSITION_DURATION, easing = EaseInOutCubic)
+                ) + fadeOut(tween(PAGE_TRANSITION_DURATION))
             },
             popEnterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { -it },
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                ) + fadeIn(
-                    animationSpec = tween(
-                        durationMillis = 400,
-                        easing = FastOutSlowInEasing
-                    )
-                )
+                    animationSpec = tween(PAGE_TRANSITION_DURATION, easing = EaseInOutCubic)
+                ) + fadeIn(tween(PAGE_TRANSITION_DURATION))
             },
             popExitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { it },
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                ) + fadeOut(
-                    animationSpec = tween(
-                        durationMillis = 300,
-                        easing = LinearOutSlowInEasing
-                    )
-                )
+                    animationSpec = tween(PAGE_TRANSITION_DURATION, easing = EaseInOutCubic)
+                ) + fadeOut(tween(PAGE_TRANSITION_DURATION))
             }
         ) {
-            // Navigation graph remains the same
             navigation<SubNavigation.OnBoardingScreen>(startDestination = Routes.OnBoardingScreen) {
-                composable<Routes.OnBoardingScreen> {
-                    OnBoardingScreenUI(navController)
-                }
+                composable<Routes.OnBoardingScreen> { OnBoardingScreenUI(navController) }
             }
             navigation<SubNavigation.AuthRoutes>(startDestination = Routes.LoginScreen) {
-                composable<Routes.LoginScreen> {
-                    LoginScreenUI(navController = navController)
-                }
-                composable<Routes.SignUpScreen> {
-                    SignUpScreenUI(navController = navController)
-                }
+                composable<Routes.LoginScreen> { LoginScreenUI(navController = navController) }
+                composable<Routes.SignUpScreen> { SignUpScreenUI(navController = navController) }
             }
             navigation<SubNavigation.HomeRoutes>(startDestination = Routes.HomeScreen) {
-                composable<Routes.HomeScreen> {
-                    HomeScreenUI(navController)
-                }
-                composable<Routes.ReportScreen> {
-                    ReportScreenUI(navController = navController)
-                }
-                composable<Routes.NotificationScreen> {
-                    NotificationScreenUI(navController)
-                }
-                composable<Routes.ProfileScreen> {
-                    ProfileScreenUI(navController = navController)
-                }
-                composable<Routes.MakeReportScreen> {
-                    MakeReportScreenUI(navController = navController)
-                }
-                composable<Routes.RequestExtraServiceScreen> {
-                    ExtraServiceScreen(navController = navController)
-                }
+                composable<Routes.HomeScreen> { HomeScreenUI(navController) }
+                composable<Routes.ReportScreen> { ReportScreenUI(navController = navController) }
+                composable<Routes.NotificationScreen> { NotificationScreenUI(navController = navController) }
+                composable<Routes.ProfileScreen> { ProfileScreenUI(navController = navController) }
+                composable<Routes.MakeReportScreen> { MakeReportScreenUI(navController = navController) }
+                composable<Routes.RequestExtraServiceScreen> { ExtraServiceScreen(navController = navController) }
             }
             navigation<SubNavigation.VerifyEmailRoutes>(startDestination = Routes.VerifyEmailScreen) {
-                composable<Routes.VerifyEmailScreen> {
-                    VerificationScreenUI(navController, currentUser!!)
-                }
+                composable<Routes.VerifyEmailScreen> { VerificationScreenUI(navController, currentUser!!) }
             }
         }
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun ProfessionalBottomBar(
-    selectedItem: Int,
+fun SmoothBottomBar(
+    selectedItemIndex: Int,
     items: List<BottomBarItem>,
     onItemSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val barAlpha = remember { Animatable(0f) }
-    val barTranslationY = remember { Animatable(20f) }
-
-    LaunchedEffect(Unit) {
-        launch {
-            barAlpha.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(
-                    durationMillis = 500,
-                    easing = FastOutSlowInEasing
-                )
-            )
-        }
-        launch {
-            barTranslationY.animateTo(
-                targetValue = 0f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
-                    stiffness = Spring.StiffnessMediumLow
-                )
-            )
-        }
-    }
-
-    Box(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .alpha(barAlpha.value)
-            .offset(y = barTranslationY.value.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .navigationBarsPadding(),
+        shape = CircleShape,
+        shadowElevation = 8.dp,
+        color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
-        Surface(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(70.dp),
-            shape = RoundedCornerShape(24.dp),
-            shadowElevation = 8.dp,
-            color = Color(0xFF1C1C1E), // Dark background for contrast
-            tonalElevation = 6.dp
+                .height(64.dp)
+                .background(Color.Black)
+
         ) {
+            val itemWidth = maxWidth / items.size
+
+            val indicatorOffset by animateDpAsState(
+                targetValue = itemWidth * selectedItemIndex,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                ),
+                label = "indicator_offset"
+            )
+
+            val indicatorColor by animateColorAsState(
+                targetValue = items[selectedItemIndex].color.copy(alpha = 0.2f),
+                animationSpec = tween(400, easing = EaseInOutCubic),
+                label = "indicator_color"
+            )
+
             Box(
                 modifier = Modifier
+                    .offset(x = indicatorOffset)
+                    .width(itemWidth)
                     .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF1C1C1E),
-                                Color(0xFF2D2D2F)
-                            )
-                        ),
-                        shape = RoundedCornerShape(24.dp)
-                    )
+                    .padding(6.dp)
+                    .clip(CircleShape)
+                    .background(indicatorColor)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    items.forEachIndexed { index, item ->
-                        ProfessionalBottomBarItem(
-                            item = item,
-                            isSelected = selectedItem == index,
-                            onClick = { onItemSelected(index) },
-                            animationDelay = index * 50L
-                        )
-                    }
+                items.forEachIndexed { index, item ->
+                    SmoothBottomBarItem(
+                        modifier = Modifier.width(itemWidth),
+                        item = item,
+                        isSelected = selectedItemIndex == index,
+                        onClick = { onItemSelected(index) }
+                    )
                 }
             }
         }
@@ -416,104 +292,47 @@ fun ProfessionalBottomBar(
 }
 
 @Composable
-fun ProfessionalBottomBarItem(
+fun SmoothBottomBarItem(
+    modifier: Modifier = Modifier,
     item: BottomBarItem,
     isSelected: Boolean,
-    onClick: () -> Unit,
-    animationDelay: Long = 0L
+    onClick: () -> Unit
 ) {
-    val scale = animateFloatAsState(
-        targetValue = if (isSelected) 1.15f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "item_scale"
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected) item.color else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(300, easing = EaseInOutCubic),
+        label = "icon_color"
     )
-
-    val iconAlpha = animateFloatAsState(
-        targetValue = if (isSelected) 1f else 0.6f,
-        animationSpec = tween(
-            durationMillis = 300,
-            easing = FastOutSlowInEasing
-        ),
-        label = "icon_alpha"
-    )
-
-    val itemAlpha = remember { Animatable(0f) }
-
-    LaunchedEffect(Unit) {
-        delay(animationDelay)
-        itemAlpha.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = 400,
-                easing = FastOutSlowInEasing
-            )
-        )
-    }
 
     Column(
+        modifier = modifier
+            .fillMaxSize()
+            .clickable(
+                onClick = onClick,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .scale(scale.value)
-            .alpha(itemAlpha.value)
+        verticalArrangement = Arrangement.Center
     ) {
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier.size(50.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(
-                        brush = if (isSelected) {
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    item.color.copy(alpha = 0.2f),
-                                    Color.Transparent
-                                )
-                            )
-                        } else {
-                            Brush.radialGradient(
-                                colors = listOf(Color.Transparent, Color.Transparent)
-                            )
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                    contentDescription = item.name,
-                    tint = if (isSelected) item.color else Color.White.copy(alpha = iconAlpha.value),
-                    modifier = Modifier.size(26.dp)
-                )
-            }
-        }
+        Icon(
+            imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+            contentDescription = item.name,
+            tint = iconColor,
+            modifier = Modifier.size(24.dp)
+        )
 
         AnimatedVisibility(
             visible = isSelected,
-            enter = fadeIn(
-                animationSpec = tween(300, easing = FastOutSlowInEasing)
-            ) + slideInVertically(
-                animationSpec = tween(300, easing = FastOutSlowInEasing),
-                initialOffsetY = { it / 2 }
-            ),
-            exit = fadeOut(
-                animationSpec = tween(200, easing = LinearOutSlowInEasing)
-            ) + slideOutVertically(
-                animationSpec = tween(200, easing = LinearOutSlowInEasing),
-                targetOffsetY = { it / 2 }
-            )
+            enter = fadeIn(tween(200, 100)) + slideInVertically(tween(200, 100)) { it / 2 },
+            exit = fadeOut(tween(150)) + slideOutVertically(tween(150)) { it / 2 }
         ) {
             Text(
                 text = item.name,
                 fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
                 color = item.color,
-                modifier = Modifier.offset(y = (-4).dp),
-                letterSpacing = 0.4.sp
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
     }
