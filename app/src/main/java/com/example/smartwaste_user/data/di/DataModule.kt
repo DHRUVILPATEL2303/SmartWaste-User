@@ -1,7 +1,10 @@
 package com.example.smartwaste_user.data.di
 
 import android.content.Context
+import androidx.compose.ui.res.stringResource
+import com.example.smartwaste_user.R
 import com.example.smartwaste_user.datastore.DataStoreManager
+import com.google.ai.client.generativeai.GenerativeModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
@@ -11,6 +14,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+
 
 
 @Module
@@ -46,4 +50,14 @@ object DataModule {
 
     }
 
+    @Provides
+    @Singleton
+    fun provideGenerativeModel(@ApplicationContext context: Context): GenerativeModel {
+        return GenerativeModel(
+            modelName = "gemini-1.5-flash",
+            apiKey = context.getString(R.string.GEMINI_API_KEY)
+        )
+    }
+
 }
+

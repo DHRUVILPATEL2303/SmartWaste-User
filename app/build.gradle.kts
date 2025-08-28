@@ -16,6 +16,7 @@ plugins {
 android {
     namespace = "com.example.smartwaste_user"
     compileSdk = 36
+    buildFeatures.buildConfig=true
 
     defaultConfig {
         applicationId = "com.example.smartwaste_user"
@@ -25,6 +26,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField(
+            "String",
+            "GEMINI_API_KEY",
+            "\"${project.findProperty("GEMINI_API_KEY") ?: ""}\""
+        )
     }
 
     buildTypes {
@@ -97,10 +103,8 @@ dependencies {
 
 
     implementation("androidx.datastore:datastore-preferences:1.1.7")
-    // In build.gradle (module)
     implementation("androidx.compose.foundation:foundation:1.6.0")
 
-// or latest version
 
     implementation("androidx.core:core-splashscreen:1.0.1")
 
@@ -119,11 +123,18 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
 //    implementation("org.osmdroid:osmdroid-compose:1.0.0-alpha01")
 
-// For making API calls to the routing service
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+
+    implementation("com.google.mlkit:image-labeling:17.0.7")
+    implementation("com.google.mlkit:image-labeling-custom:17.0.1")
+    implementation("com.google.firebase:firebase-ml-model-interpreter:22.0.4")
+    implementation("androidx.compose.foundation:foundation:1.6.0")
+
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
 
 
 }

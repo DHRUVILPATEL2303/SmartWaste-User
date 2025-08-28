@@ -2,4 +2,5 @@
     <string name="app_name">SmartWaste-User</string>
     <string name="default_web_client_id">101899143990484636051</string>
     <string name="API_KEY">AIzaSyBeK1B4CnwysTKnEvSm4ZVVMyCnx-a2DKY</string>
+    <string name="GEMINI_API_KEY">AIzaSyC-wP5pnjsHzSR3lfy7I1up8jjJgl47quM</string>
 </resources>

@@ -17,6 +17,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -35,10 +36,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.ClearAll
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
@@ -71,6 +74,7 @@ import androidx.navigation.toRoute
 import com.example.smartwaste_user.presentation.screens.Auth.LoginScreenUI
 import com.example.smartwaste_user.presentation.screens.OnBoarding.OnBoardingScreenUI
 import com.example.smartwaste_user.presentation.screens.Auth.SignUpScreenUI
+import com.example.smartwaste_user.presentation.screens.chatbotscreen.ChatBotScreenUI
 import com.example.smartwaste_user.presentation.screens.home.HomeScreenUI
 import com.example.smartwaste_user.presentation.screens.notification.NotificationScreenUI
 import com.example.smartwaste_user.presentation.screens.profile.ProfileScreenUI
@@ -117,12 +121,20 @@ val bottomBarItems = listOf(
         Color(0xFFFF9800)
     ),
     BottomBarItem(
+        name="ChatBot",
+        Routes.ChatBotScreen::class.qualifiedName!!,
+        Icons.Filled.Chat,
+        Icons.Outlined.Chat,
+        Color(0xFFC71510)
+    ),
+    BottomBarItem(
         "Profile",
         Routes.ProfileScreen::class.qualifiedName!!,
         Icons.Filled.AccountCircle,
         Icons.Outlined.AccountCircle,
         Color(0xFF9C27B0)
     ),
+
 )
 private val bottomBarRoutes = bottomBarItems.map { it.route }
 
@@ -259,6 +271,10 @@ fun AppNavigation(
                     )
                 }
 
+                composable<Routes.ChatBotScreen> {
+                    ChatBotScreenUI(navController=navController)
+                }
+
             }
             navigation<SubNavigation.VerifyEmailRoutes>(startDestination = Routes.VerifyEmailScreen) {
                 composable<Routes.VerifyEmailScreen> {
@@ -275,6 +291,8 @@ fun AppNavigation(
 }
 
 
+
+
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun SmoothBottomBar(
@@ -287,6 +305,7 @@ fun SmoothBottomBar(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp)
+
             .navigationBarsPadding(),
         shape = CircleShape,
         shadowElevation = 8.dp,
@@ -323,6 +342,8 @@ fun SmoothBottomBar(
                     .fillMaxSize()
                     .padding(6.dp)
                     .clip(CircleShape)
+
+
                     .background(indicatorColor)
             )
 

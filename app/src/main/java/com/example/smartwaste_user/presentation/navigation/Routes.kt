@@ -47,6 +47,9 @@ sealed class Routes{
         val routeId: String
     )
 
+    @Serializable
+    object ChatBotScreen
+
 }
 
 
