@@ -8,7 +8,9 @@ data class RouteProgressModel(
     val assignedTruckId: String = "",
     val areaProgress: List<AreaProgress> = emptyList(),
     val isRouteCompleted: Boolean = false,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
+    val workerLat : Double=0.0,
+    val workerLng : Double =0.0
 )
 
 data class AreaProgress(

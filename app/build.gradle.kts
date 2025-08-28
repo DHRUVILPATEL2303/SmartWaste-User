@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.androidx.compose.material)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.inappmessaging.display)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -112,6 +113,10 @@ dependencies {
 
     implementation("org.osmdroid:osmdroid-android:6.1.16")
     implementation("org.osmdroid:osmdroid-wms:6.1.16")
+
+
+    implementation("com.google.maps.android:maps-compose:4.3.3")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
 //    implementation("org.osmdroid:osmdroid-compose:1.0.0-alpha01")
 
 // For making API calls to the routing service
