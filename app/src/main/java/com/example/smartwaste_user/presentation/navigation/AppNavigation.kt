@@ -72,6 +72,7 @@ import com.example.smartwaste_user.presentation.screens.profile.ProfileScreenUI
 import com.example.smartwaste_user.presentation.screens.reportscreens.ExtraServiceScreen
 import com.example.smartwaste_user.presentation.screens.reportscreens.MakeReportScreenUI
 import com.example.smartwaste_user.presentation.screens.reportscreens.ReportScreenUI
+import com.example.smartwaste_user.presentation.screens.routemap.RouteMapScreenUI
 import com.example.smartwaste_user.presentation.screens.verificationScreens.VerificationScreenUI
 import com.example.smartwaste_user.presentation.viewmodels.AuthViewModel
 import com.example.smartwaste_user.presentation.viewmodels.OnboardingViewModel
@@ -214,6 +215,7 @@ fun AppNavigation(
                 composable<Routes.ProfileScreen> { ProfileScreenUI(navController = navController) }
                 composable<Routes.MakeReportScreen> { MakeReportScreenUI(navController = navController) }
                 composable<Routes.RequestExtraServiceScreen> { ExtraServiceScreen(navController = navController) }
+                composable<Routes.RouteMapScreen> { RouteMapScreenUI(navController = navController) }
             }
             navigation<SubNavigation.VerifyEmailRoutes>(startDestination = Routes.VerifyEmailScreen) {
                 composable<Routes.VerifyEmailScreen> { VerificationScreenUI(navController, currentUser!!) }

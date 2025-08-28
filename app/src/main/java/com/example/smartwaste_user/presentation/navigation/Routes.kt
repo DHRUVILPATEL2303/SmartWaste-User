@@ -38,6 +38,9 @@ sealed class Routes{
     @Serializable
     object RequestExtraServiceScreen
 
+    @Serializable
+    object RouteMapScreen
+
 }
 
 

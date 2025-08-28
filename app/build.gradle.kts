@@ -110,5 +110,8 @@ dependencies {
 
     implementation("com.google.zxing:core:3.5.3")
 
+    // Map dependencies for OpenStreetMap
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
+    implementation("androidx.compose.runtime:runtime-saveable:1.7.8")
 
 }
