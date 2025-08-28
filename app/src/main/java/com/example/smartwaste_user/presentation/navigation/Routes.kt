@@ -1,5 +1,8 @@
 package com.example.smartwaste_user.presentation.navigation
 
+import android.os.Parcelable
+import com.example.smartwaste_user.data.models.AreaInfo
+import com.example.smartwaste_user.data.models.RouteModel
 import kotlinx.serialization.Serializable
 
 sealed class Routes{
@@ -38,6 +41,12 @@ sealed class Routes{
     @Serializable
     object RequestExtraServiceScreen
 
+
+    @Serializable
+    data class RouteMapScreen(
+        val routeId: String
+    )
+
 }
 
 
@@ -56,3 +65,4 @@ sealed class SubNavigation {
     object VerifyEmailRoutes
 
 }
+

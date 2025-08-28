@@ -124,7 +124,7 @@ fun SignUpScreenUI(viewModel: AuthViewModel = hiltViewModel<AuthViewModel>(), na
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Image(
-                    painter = painterResource(id = R.drawable.signup),
+                    painter = painterResource(id = R.drawable.ic_splash_logo),
                     contentDescription = "Sign Up",
                     modifier = Modifier
                         .fillMaxWidth()

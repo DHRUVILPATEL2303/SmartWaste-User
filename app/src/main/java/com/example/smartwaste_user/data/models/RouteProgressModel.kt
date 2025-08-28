@@ -15,5 +15,7 @@ data class AreaProgress(
     val areaId: String = "",
     val areaName: String = "",
     var isCompleted: Boolean = false,
-    var completedAt: Long? = null
+    var completedAt: Long? = null,
+    val latitude : Double = 0.0,
+    val longitude : Double = 0.0
 )

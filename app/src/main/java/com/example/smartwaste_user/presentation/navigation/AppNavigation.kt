@@ -5,13 +5,16 @@ import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.EaseInOutCubic
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,6 +27,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -63,6 +67,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.smartwaste_user.presentation.screens.Auth.LoginScreenUI
 import com.example.smartwaste_user.presentation.screens.OnBoarding.OnBoardingScreenUI
 import com.example.smartwaste_user.presentation.screens.Auth.SignUpScreenUI
@@ -72,14 +77,11 @@ import com.example.smartwaste_user.presentation.screens.profile.ProfileScreenUI
 import com.example.smartwaste_user.presentation.screens.reportscreens.ExtraServiceScreen
 import com.example.smartwaste_user.presentation.screens.reportscreens.MakeReportScreenUI
 import com.example.smartwaste_user.presentation.screens.reportscreens.ReportScreenUI
+import com.example.smartwaste_user.presentation.screens.routemap.RouteMapScreenUI
 import com.example.smartwaste_user.presentation.screens.verificationScreens.VerificationScreenUI
 import com.example.smartwaste_user.presentation.viewmodels.AuthViewModel
 import com.example.smartwaste_user.presentation.viewmodels.OnboardingViewModel
 import com.google.firebase.auth.FirebaseUser
-import androidx.compose.animation.core.EaseInOutCubic
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.layout.navigationBarsPadding
 
 const val PAGE_TRANSITION_DURATION = 400
 const val BOTTOM_BAR_ANIM_DURATION = 500
@@ -93,10 +95,34 @@ data class BottomBarItem(
 )
 
 val bottomBarItems = listOf(
-    BottomBarItem("Home", Routes.HomeScreen::class.qualifiedName!!, Icons.Filled.Home, Icons.Outlined.Home, Color(0xFF2196F3)),
-    BottomBarItem("Report", Routes.ReportScreen::class.qualifiedName!!, Icons.Filled.ClearAll, Icons.Outlined.ClearAll, Color(0xFF4CAF50)),
-    BottomBarItem("Notify", Routes.NotificationScreen::class.qualifiedName!!, Icons.Filled.Notifications, Icons.Outlined.Notifications, Color(0xFFFF9800)),
-    BottomBarItem("Profile", Routes.ProfileScreen::class.qualifiedName!!, Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle, Color(0xFF9C27B0)),
+    BottomBarItem(
+        "Home",
+        Routes.HomeScreen::class.qualifiedName!!,
+        Icons.Filled.Home,
+        Icons.Outlined.Home,
+        Color(0xFF2196F3)
+    ),
+    BottomBarItem(
+        "Report",
+        Routes.ReportScreen::class.qualifiedName!!,
+        Icons.Filled.ClearAll,
+        Icons.Outlined.ClearAll,
+        Color(0xFF4CAF50)
+    ),
+    BottomBarItem(
+        "Notify",
+        Routes.NotificationScreen::class.qualifiedName!!,
+        Icons.Filled.Notifications,
+        Icons.Outlined.Notifications,
+        Color(0xFFFF9800)
+    ),
+    BottomBarItem(
+        "Profile",
+        Routes.ProfileScreen::class.qualifiedName!!,
+        Icons.Filled.AccountCircle,
+        Icons.Outlined.AccountCircle,
+        Color(0xFF9C27B0)
+    ),
 )
 private val bottomBarRoutes = bottomBarItems.map { it.route }
 
@@ -118,7 +144,10 @@ fun AppNavigation(
         else -> SubNavigation.VerifyEmailRoutes
     }
 
-    Log.d("AppNavigation", "startDestination: $startDestination, isEmailVerified: ${currentUser?.isEmailVerified}")
+    Log.d(
+        "AppNavigation",
+        "startDestination: $startDestination, isEmailVerified: ${currentUser?.isEmailVerified}"
+    )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -136,11 +165,17 @@ fun AppNavigation(
                 visible = currentBaseRoute in bottomBarRoutes,
                 enter = slideInVertically(
                     initialOffsetY = { it },
-                    animationSpec = tween(durationMillis = BOTTOM_BAR_ANIM_DURATION, easing = EaseInOutCubic)
+                    animationSpec = tween(
+                        durationMillis = BOTTOM_BAR_ANIM_DURATION,
+                        easing = EaseInOutCubic
+                    )
                 ) + fadeIn(animationSpec = tween(durationMillis = BOTTOM_BAR_ANIM_DURATION)),
                 exit = slideOutVertically(
                     targetOffsetY = { it },
-                    animationSpec = tween(durationMillis = BOTTOM_BAR_ANIM_DURATION, easing = EaseInOutCubic)
+                    animationSpec = tween(
+                        durationMillis = BOTTOM_BAR_ANIM_DURATION,
+                        easing = EaseInOutCubic
+                    )
                 ) + fadeOut(animationSpec = tween(durationMillis = BOTTOM_BAR_ANIM_DURATION))
             ) {
                 SmoothBottomBar(
@@ -150,7 +185,7 @@ fun AppNavigation(
                         if (selectedItemIndex != index) {
                             selectedItemIndex = index
                             navController.navigate(bottomBarItems[index].route) {
-                                popUpTo(Routes.HomeScreen) {
+                                popUpTo(Routes.HomeScreen::class.qualifiedName!!) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
@@ -165,7 +200,7 @@ fun AppNavigation(
     ) { paddingValues ->
         BackHandler(enabled = currentBaseRoute in bottomBarRoutes && currentBaseRoute != Routes.HomeScreen::class.qualifiedName) {
             navController.navigate(Routes.HomeScreen) {
-                popUpTo(Routes.HomeScreen) { inclusive = false }
+                popUpTo(Routes.HomeScreen::class.qualifiedName!!) { inclusive = false }
                 launchSingleTop = true
             }
             selectedItemIndex = 0
@@ -214,13 +249,31 @@ fun AppNavigation(
                 composable<Routes.ProfileScreen> { ProfileScreenUI(navController = navController) }
                 composable<Routes.MakeReportScreen> { MakeReportScreenUI(navController = navController) }
                 composable<Routes.RequestExtraServiceScreen> { ExtraServiceScreen(navController = navController) }
+                composable<Routes.RouteMapScreen>(
+
+                ) {
+                    val data = it.toRoute<Routes.RouteMapScreen>()
+                    RouteMapScreenUI(
+                        navController = navController,
+                        routeId = data.routeId
+                    )
+                }
+
             }
             navigation<SubNavigation.VerifyEmailRoutes>(startDestination = Routes.VerifyEmailScreen) {
-                composable<Routes.VerifyEmailScreen> { VerificationScreenUI(navController, currentUser!!) }
+                composable<Routes.VerifyEmailScreen> {
+                    VerificationScreenUI(
+                        navController,
+                        currentUser!!
+                    )
+                }
             }
+
+
         }
     }
 }
+
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable

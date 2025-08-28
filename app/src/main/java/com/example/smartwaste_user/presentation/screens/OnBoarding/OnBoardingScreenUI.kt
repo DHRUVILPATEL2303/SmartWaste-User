@@ -45,9 +45,9 @@ fun OnBoardingScreenUI(navController: NavController,viewModel: OnboardingViewMod
     val coroutineScope = rememberCoroutineScope()
 
     val pages = listOf(
-        OnBoardingPage(R.drawable.onboarding_1, "Smart Waste Collection", "Effortlessly manage waste with our intelligent collection system."),
-        OnBoardingPage(R.drawable.onboarding_2, "Track and Recycle", "Monitor your recycling progress and contribute to a greener planet."),
-        OnBoardingPage(R.drawable.onboarding_3, "Join Our Mission", "Be part of our community to keep the city clean and sustainable.")
+        OnBoardingPage(R.drawable.ic_launcher_foreground, "Smart Waste Collection", "Effortlessly manage waste with our intelligent collection system."),
+        OnBoardingPage(R.drawable.ic_launcher_foreground, "Track and Recycle", "Monitor your recycling progress and contribute to a greener planet."),
+        OnBoardingPage(R.drawable.ic_launcher_foreground, "Join Our Mission", "Be part of our community to keep the city clean and sustainable.")
     )
 
     val gradientColors = listOf(

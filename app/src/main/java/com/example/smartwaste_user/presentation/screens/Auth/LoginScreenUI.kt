@@ -176,7 +176,7 @@ fun LoginScreenUI(
             Spacer(modifier = Modifier.height(16.dp))
 
             Image(
-                painter = painterResource(id = R.drawable.signup),
+                painter = painterResource(id = R.drawable.ic_splash_logo),
                 contentDescription = "Sign In Illustration",
                 modifier = Modifier
                     .fillMaxWidth()
@@ -323,7 +323,7 @@ fun LoginScreenUI(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_google),
+                                painter = painterResource(id = R.drawable.ic_launcher_foreground),
                                 contentDescription = null,
                                 tint = Color.Unspecified,
                                 modifier = Modifier.size(20.dp)

@@ -1,12 +1,10 @@
 package com.example.smartwaste_user.presentation.screens.home
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -17,9 +15,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -32,7 +28,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -41,31 +36,27 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.smartwaste_user.data.models.AreaInfo
 import com.example.smartwaste_user.data.models.AreaProgress
+import com.example.smartwaste_user.data.models.RouteModel
 import com.example.smartwaste_user.data.models.RouteProgressModel
 import com.example.smartwaste_user.data.models.UserModel
 import com.example.smartwaste_user.data.models.WorkerFeedBackModel
+import com.example.smartwaste_user.presentation.navigation.Routes
 import com.example.smartwaste_user.presentation.viewmodels.CommonRoutesProgressState
 import com.example.smartwaste_user.presentation.viewmodels.RouteProgressViewModel
 import com.example.smartwaste_user.presentation.viewmodels.UserViewModel
@@ -85,6 +76,7 @@ fun HomeScreenUI(
     workerFeedBackViewModel: WorkerFeedBackViewModel = hiltViewModel<WorkerFeedBackViewModel>()
 ) {
     val userState by userViewModel.userState.collectAsState()
+    val routeProgressState by routeProgressViewModel.routeProgressState.collectAsState()
     var showVerifyDialog by remember { mutableStateOf(false) }
     var isVerified by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -116,7 +108,20 @@ fun HomeScreenUI(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            CleanTopAppBar(isAreaSelected = userState.succcess?.areaId?.isNotEmpty() == true)
+            val user = userState.succcess
+            val isAreaSelected = user?.areaId?.isNotEmpty() == true
+
+            CleanTopAppBar(
+                isAreaSelected = isAreaSelected,
+                onMapClick = {
+
+                    user?.routeId?.let { routeId ->
+                        if (routeId.isNotEmpty()) {
+                            navController.navigate(Routes.RouteMapScreen(routeId = routeId))
+                        }
+                    }
+                }
+            )
         },
         containerColor = Color(0xFFF8FAFC)
     ) { padding ->
@@ -132,7 +137,7 @@ fun HomeScreenUI(
                     val user = userState.succcess!!
                     if (user.areaId.isEmpty() || user.areaName.isEmpty()) {
                         CleanAreaSelectionScreen(
-                            routeProgressState = routeProgressViewModel.routeProgressState.collectAsState().value,
+                            routeProgressState = routeProgressState,
                             onAreaSelected = { routeId, routeName, areaId, areaName ->
                                 userViewModel.updateUserData(
                                     user.copy(
@@ -147,7 +152,7 @@ fun HomeScreenUI(
                     } else {
                         CleanRouteStatusScreen(
                             user = user,
-                            routeProgressState = routeProgressViewModel.routeProgressState.collectAsState().value,
+                            routeProgressState = routeProgressState,
                             workerFeedBackViewModel = workerFeedBackViewModel
                         )
                     }
@@ -177,19 +182,9 @@ fun HomeScreenUI(
 @Composable
 fun CleanTopAppBar(
     isAreaSelected: Boolean,
-    modifier: Modifier = Modifier
+    onMapClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
-    val shimmerTranslate by shimmerTransition.animateFloat(
-        initialValue = -300f,
-        targetValue = 300f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmer_translate"
-    )
-
     TopAppBar(
         title = {
             Row(
@@ -224,7 +219,6 @@ fun CleanTopAppBar(
                         color = Color.White,
                         modifier = Modifier.animateContentSize()
                     )
-
                     AnimatedVisibility(
                         visible = isAreaSelected,
                         enter = fadeIn(animationSpec = tween(500)) + slideInVertically { -it / 2 },
@@ -241,49 +235,61 @@ fun CleanTopAppBar(
             }
         },
         actions = {
-            AnimatedVisibility(
-                visible = isAreaSelected,
-                enter = fadeIn(animationSpec = tween(400)) + scaleIn(),
-                exit = fadeOut() + scaleOut()
-            ) {
-                Surface(
-                    modifier = Modifier
-                        .padding(end = 16.dp)
-                        .height(28.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    color = Color.White.copy(alpha = 0.2f),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AnimatedVisibility(
+                    visible = isAreaSelected,
+                    enter = fadeIn(animationSpec = tween(400)) + scaleIn(),
+                    exit = fadeOut() + scaleOut()
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    IconButton(onClick = onMapClick) {
+                        Icon(
+                            Icons.Default.Map,
+                            contentDescription = "Open Map",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = isAreaSelected,
+                    enter = fadeIn(animationSpec = tween(400)) + scaleIn(),
+                    exit = fadeOut() + scaleOut()
+                ) {
+                    Surface(
+                        modifier = Modifier.padding(end = 16.dp).height(28.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        color = Color.White.copy(alpha = 0.2f),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
                     ) {
-                        val pulseTransition = rememberInfiniteTransition(label = "pulse")
-                        val pulseScale by pulseTransition.animateFloat(
-                            initialValue = 0.8f,
-                            targetValue = 1.2f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(1000),
-                                repeatMode = RepeatMode.Reverse
-                            ),
-                            label = "pulse_scale"
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .scale(pulseScale)
-                                .background(Color(0xFF10B981), CircleShape)
-                        )
-
-                        Text(
-                            text = "LIVE",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = Color.White,
-                            letterSpacing = 0.8.sp
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            val pulseTransition = rememberInfiniteTransition(label = "pulse")
+                            val pulseScale by pulseTransition.animateFloat(
+                                initialValue = 0.8f,
+                                targetValue = 1.2f,
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(1000),
+                                    repeatMode = RepeatMode.Reverse
+                                ),
+                                label = "pulse_scale"
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .scale(pulseScale)
+                                    .background(Color(0xFF10B981), CircleShape)
+                            )
+                            Text(
+                                text = "LIVE",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                color = Color.White,
+                                letterSpacing = 0.8.sp
+                            )
+                        }
                     }
                 }
             }
@@ -293,10 +299,7 @@ fun CleanTopAppBar(
             .height(100.dp)
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF1E40AF),
-                        Color(0xFF3B82F6)
-                    )
+                    colors = listOf(Color(0xFF1E40AF), Color(0xFF3B82F6))
                 ),
                 shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
             )
@@ -304,6 +307,7 @@ fun CleanTopAppBar(
         windowInsets = WindowInsets.statusBars
     )
 }
+
 
 @Composable
 fun CleanLoadingState(message: String) {
@@ -544,7 +548,6 @@ private fun CleanRouteInfoHeader(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Header
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -1063,7 +1066,6 @@ fun CleanAreaSelectionScreen(
             routeProgressState.isLoading -> CleanLoadingState("Loading available areas...")
             routeProgressState.error.isNotEmpty() -> CleanErrorState(routeProgressState.error)
             routeProgressState.succcess != null -> {
-                // Header
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1155,10 +1157,10 @@ fun CleanRouteItem(
                         .fillMaxWidth()
                         .background(Color(0xFFF9FAFB), RoundedCornerShape(12.dp))
                         .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
+                        modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
@@ -1169,14 +1171,14 @@ fun CleanRouteItem(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            area.areaName,
+                            text = area.areaName,
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = FontWeight.Medium
                             ),
                             color = Color(0xFF111827)
                         )
                     }
-
+                    Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
                             onAreaSelected(route.routeId, route.routeId, area.areaId, area.areaName)
@@ -1309,7 +1311,6 @@ fun CleanFeedbackBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Header
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -1327,7 +1328,6 @@ fun CleanFeedbackBottomSheet(
                         modifier = Modifier.size(30.dp)
                     )
                 }
-
                 Text(
                     "Collection Complete!",
                     style = MaterialTheme.typography.headlineSmall.copy(
@@ -1335,7 +1335,6 @@ fun CleanFeedbackBottomSheet(
                     ),
                     color = Color(0xFF111827)
                 )
-
                 Text(
                     "How was the waste collection service today?",
                     style = MaterialTheme.typography.bodyMedium,
@@ -1344,13 +1343,11 @@ fun CleanFeedbackBottomSheet(
                 )
             }
 
-            // Rating
             CleanStarRating(
                 rating = selectedRating,
                 onRatingChanged = { selectedRating = it }
             )
 
-            // Feedback Input
             OutlinedTextField(
                 value = improvementText,
                 onValueChange = { improvementText = it },
@@ -1364,7 +1361,6 @@ fun CleanFeedbackBottomSheet(
                 )
             )
 
-            // Submit Button
             Button(
                 onClick = { onSubmit(selectedRating, improvementText) },
                 enabled = selectedRating > 0,

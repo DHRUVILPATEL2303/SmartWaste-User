@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-
+    id("kotlin-parcelize")
 
 
     id("com.google.devtools.ksp")
@@ -109,6 +109,16 @@ dependencies {
 
 
     implementation("com.google.zxing:core:3.5.3")
+
+    implementation("org.osmdroid:osmdroid-android:6.1.16")
+    implementation("org.osmdroid:osmdroid-wms:6.1.16")
+//    implementation("org.osmdroid:osmdroid-compose:1.0.0-alpha01")
+
+// For making API calls to the routing service
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
 
 }
