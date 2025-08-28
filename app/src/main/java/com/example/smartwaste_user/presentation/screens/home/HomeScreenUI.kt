@@ -70,6 +70,7 @@ import com.example.smartwaste_user.presentation.viewmodels.CommonRoutesProgressS
 import com.example.smartwaste_user.presentation.viewmodels.RouteProgressViewModel
 import com.example.smartwaste_user.presentation.viewmodels.UserViewModel
 import com.example.smartwaste_user.presentation.viewmodels.WorkerFeedBackViewModel
+import com.example.smartwaste_user.presentation.navigation.Routes
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -116,7 +117,10 @@ fun HomeScreenUI(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            CleanTopAppBar(isAreaSelected = userState.succcess?.areaId?.isNotEmpty() == true)
+            CleanTopAppBar(
+                isAreaSelected = userState.succcess?.areaId?.isNotEmpty() == true,
+                navController = navController
+            )
         },
         containerColor = Color(0xFFF8FAFC)
     ) { padding ->
@@ -177,6 +181,7 @@ fun HomeScreenUI(
 @Composable
 fun CleanTopAppBar(
     isAreaSelected: Boolean,
+    navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
     val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
@@ -241,6 +246,19 @@ fun CleanTopAppBar(
             }
         },
         actions = {
+            // Map button - always visible
+            IconButton(
+                onClick = { navController.navigate(Routes.RouteMapScreen) },
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
+                Icon(
+                    Icons.Default.Map,
+                    contentDescription = "Route Map",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
             AnimatedVisibility(
                 visible = isAreaSelected,
                 enter = fadeIn(animationSpec = tween(400)) + scaleIn(),
