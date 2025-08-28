@@ -2,6 +2,7 @@ package com.example.smartwaste_user.data.repoimpl.DirectionsRepositryimpl
 
 import com.example.smartwaste_user.data.remote.NetworkModule
 import com.example.smartwaste_user.domain.repo.directionrepo.DirectionsRepositry
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.osmdroid.util.GeoPoint
@@ -36,6 +37,35 @@ class DirectionRepositryImpl @Inject constructor(
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
+        }
+    }
+
+    override suspend fun getEta(
+        origin: LatLng,
+        destination: LatLng,
+        apiKey: String
+    ): String = withContext(Dispatchers.IO) {
+        try {
+            val api = NetworkModule.provideDirectionsApi()
+
+            val response = api.getDirections(
+                origin = "${origin.latitude},${origin.longitude}",
+                destination = "${destination.latitude},${destination.longitude}",
+                mode = "driving",
+                apiKey = apiKey
+            )
+
+            val durationText = response.routes
+                ?.firstOrNull()
+                ?.legs
+                ?.firstOrNull()
+                ?.duration
+                ?.text
+
+            durationText ?: "N/A"
+        } catch (e: Exception) {
+            e.printStackTrace()
+            "N/A"
         }
     }
 

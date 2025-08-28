@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -50,7 +51,6 @@ fun RouteMapScreenUI(
     val scope = rememberCoroutineScope()
 
     var isDarkMode by rememberSaveable { mutableStateOf(false) }
-    // CHANGE: Added state for map type. Using HYBRID for satellite with labels.
     var mapType by remember { mutableStateOf(MapType.NORMAL) }
 
     val backgroundColor = if (isDarkMode) Color(0xFF121212) else MaterialTheme.colorScheme.background
@@ -58,6 +58,8 @@ fun RouteMapScreenUI(
     val onSurfaceColor = if (isDarkMode) Color.White else Color.Black
     val primaryColor = if (isDarkMode) Color(0xFF90CAF9) else MaterialTheme.colorScheme.primary
     val cardColor = if (isDarkMode) Color(0xFF2D2D2D) else Color.White
+
+    val apiKey = stringResource(id = R.string.google_api_key)
 
     val mapStyleOptions = if (isDarkMode && mapType == MapType.NORMAL) {
         remember { MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_dark) }
@@ -73,6 +75,8 @@ fun RouteMapScreenUI(
     )
     val routeState = routeViewModel.routeProgressState.collectAsState().value
     val mapState = mapViewModel.state.collectAsState().value
+
+    val etaAndDistanceState = mapViewModel.etaAndDistanceState.collectAsState().value
     val selectedRoute = routeState.succcess?.find { it.routeId == routeId }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
@@ -254,6 +258,87 @@ fun RouteMapScreenUI(
                         "My Location",
                         tint = if (isDarkMode) Color.Black else Color.White
                     )
+                }
+            }
+
+            // CHANGE: Added button to get ETA and distance
+            if (selectedRoute != null && (selectedRoute.workerLat != 0.0 || selectedRoute.workerLng != 0.0)) {
+                FloatingActionButton(
+                    onClick = {
+                        try {
+                            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                                if (location != null) {
+                                    val userLatLng = LatLng(location.latitude, location.longitude)
+                                    val truckLatLng = LatLng(selectedRoute.workerLat, selectedRoute.workerLng)
+
+                                    mapViewModel.getEtaAndDistance(userLatLng, truckLatLng, apiKey) // Replace with your API key
+                                }
+                            }
+                        } catch (e: SecurityException) {
+                            // Handle exception
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(start = 16.dp, bottom = 200.dp),
+                    containerColor = primaryColor
+                ) {
+                    Icon(
+                        Icons.Default.Directions,
+                        "Get ETA & Distance to Truck",
+                        tint = if (isDarkMode) Color.Black else Color.White
+                    )
+                }
+            }
+
+            if (etaAndDistanceState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 280.dp)
+                )
+            } else if (etaAndDistanceState.error != null) {
+                Text(
+                    text = "Error: ${etaAndDistanceState.error}",
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 280.dp)
+                )
+            } else if (etaAndDistanceState.eta.isNotEmpty() && etaAndDistanceState.distance.isNotEmpty()) {
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 260.dp, start = 16.dp, end = 16.dp)
+                        .fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardColor.copy(alpha = 0.96f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "To truck:",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = primaryColor
+                        )
+                        HorizontalDivider(color = onSurfaceColor.copy(alpha = 0.2f))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "ETA: ${etaAndDistanceState.eta}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = onSurfaceColor
+                            )
+                            Text(
+                                text = "Distance: ${etaAndDistanceState.distance}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = onSurfaceColor
+                            )
+                        }
+                    }
                 }
             }
 

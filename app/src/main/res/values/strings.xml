@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">SmartWaste-User</string>
     <string name="default_web_client_id">101899143990484636051</string>
+    <string name="API_KEY">AIzaSyBeK1B4CnwysTKnEvSm4ZVVMyCnx-a2DKY</string>
 </resources>
