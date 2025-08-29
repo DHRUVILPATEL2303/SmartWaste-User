@@ -255,49 +255,4 @@ fun SplashScreen(onFinished: () -> Unit) {
 }
 
 
-// In a new file, e.g., ZegoCallUI.kt
 
-import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.fragment.app.FragmentContainerView
-import com.zegocloud.uikit.prebuilt.call.config.ZegoNotificationConfig
-import com.zegocloud.uikit.prebuilt.call.invite.widget.ZegoSendCallInvitationButton
-import com.zegocloud.uikit.service.defines.ZegoUIKitUser
-
-// This is the configuration data our Composable will need
-data class ZegoCallConfig(
-    val appID: Long,
-    val appSign: String,
-    val userID: String,
-    val userName: String,
-    val callID: String,
-    val targetUserID: String, // The ID of the person you are calling
-    val targetUserName: String
-)
-
-@Composable
-fun ZegoUIKitPrebuiltCall(
-    modifier: Modifier = Modifier,
-    config: ZegoCallConfig
-) {
-    val context = LocalContext.current
-
-    AndroidView(
-        modifier = modifier,
-        factory = {
-            // This is the button from the Zego UI Kit that handles initiating the call
-            ZegoSendCallInvitationButton(it).apply {
-                // Configure the button with all the necessary call details
-                setIsVideoCall(true) // or false for an audio call
-                resourceID = "zego_uikit_call" // This should match a drawable resource
-                setInvitees(
-                    listOf(ZegoUIKitUser(config.targetUserID, config.targetUserName))
-                )
-            }
-        }
-    )
-}
