@@ -1,10 +1,14 @@
 package com.example.smartwaste_user.presentation.viewmodels.geminiviewmodel
 
+import android.app.Application
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.smartwaste_user.common.ResultState
 import com.example.smartwaste_user.domain.usecase.geminiusecase.GetResponseForImageUseCAse
 import com.example.smartwaste_user.domain.usecase.geminiusecase.GetTextResponseUSeCAse
+import com.example.smartwaste_user.domain.usecase.geminiusecase.GetVideoResponseUSecAse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,14 +17,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// Represents a single message in the chat
 data class Message(
     val text: String,
     val imageUri: Uri? = null,
+    val videoUri: Uri? = null,
     val isFromUser: Boolean
 )
 
-// Represents the entire state of the chat screen
 data class ChatState(
     val messages: List<Message> = emptyList(),
     val isLoading: Boolean = false,
@@ -29,29 +32,37 @@ data class ChatState(
 
 @HiltViewModel
 class GeminiViewModel @Inject constructor(
+    private val application: Application,
     private val getTextResponseUseCase: GetTextResponseUSeCAse,
-    private val getResponseForImageUseCase: GetResponseForImageUseCAse
+    private val getResponseForImageUseCase: GetResponseForImageUseCAse,
+    private val getVideoResponseUSecAse: GetVideoResponseUSecAse
 ) : ViewModel() {
 
     private val _chatState = MutableStateFlow(ChatState())
     val chatState: StateFlow<ChatState> = _chatState.asStateFlow()
 
     init {
-        // Add a welcome message from the bot
         _chatState.update {
             it.copy(
                 messages = listOf(
-                    Message("Hello! How can I help you with waste management today?", isFromUser = false)
+                    Message("Hello! I am SmartWaste Assistant. How can I help you with waste management today? 🌱", isFromUser = false)
                 )
             )
         }
     }
 
-    fun sendMessage(prompt: String) {
+    fun sendMessage(prompt: String, uri: Uri? = null) {
+        val context = application.applicationContext
 
+        val userMessage = Message(
+            text = prompt,
+            isFromUser = true,
+            imageUri = if (isImage(context, uri)) uri else null,
+            videoUri = if (isVideo(context, uri)) uri else null
+        )
         _chatState.update {
             it.copy(
-                messages = it.messages + Message(text = prompt, isFromUser = true),
+                messages = it.messages + userMessage,
                 isLoading = true,
                 error = null
             )
@@ -59,18 +70,21 @@ class GeminiViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val response = getTextResponseUseCase.getTextReponse(prompt)
-                // Add bot response
-                _chatState.update {
-                    it.copy(
-                        messages = it.messages + Message(text = response, isFromUser = false),
-                        isLoading = false
-                    )
+                when {
+                    isVideo(context, uri) -> {
+                        handleVideoPrompt(uri!!, prompt)
+                    }
+                    isImage(context, uri) -> {
+                        handleImagePrompt(uri!!, prompt)
+                    }
+                    else -> {
+                        handleTextPrompt(prompt)
+                    }
                 }
             } catch (e: Exception) {
                 _chatState.update {
                     it.copy(
-                        error = e.message ?: "An unknown error occurred",
+                        error = e.message ?: "An unexpected error occurred.",
                         isLoading = false
                     )
                 }
@@ -78,34 +92,71 @@ class GeminiViewModel @Inject constructor(
         }
     }
 
-    fun sendImagePrompt(imageUri: Uri, prompt: String) {
-        // Add user message with image to the list
+    private suspend fun handleTextPrompt(prompt: String) {
+        val response = getTextResponseUseCase.getTextReponse(prompt)
         _chatState.update {
             it.copy(
-                messages = it.messages + Message(text = prompt, imageUri = imageUri, isFromUser = true),
-                isLoading = true,
-                error = null
+                messages = it.messages + Message(text = response, isFromUser = false),
+                isLoading = false
             )
         }
+    }
 
-        viewModelScope.launch {
-            try {
-                val response = getResponseForImageUseCase.getREsponseforImageUSeCAse(prompt, imageUri)
-                // Add bot response
-                _chatState.update {
-                    it.copy(
-                        messages = it.messages + Message(text = response, isFromUser = false),
-                        isLoading = false
-                    )
+    private suspend fun handleImagePrompt(imageUri: Uri, prompt: String) {
+        val finalPrompt = prompt.ifBlank { "Analyze this waste image and provide recycling guidance." }
+        val response = getResponseForImageUseCase.getREsponseforImageUSeCAse(finalPrompt, imageUri)
+        _chatState.update {
+            it.copy(
+                messages = it.messages + Message(text = response, isFromUser = false),
+                isLoading = false
+            )
+        }
+    }
+
+    private suspend fun handleVideoPrompt(videoUri: Uri, prompt: String) {
+        val finalPrompt = prompt.ifBlank { "Analyze this waste video and provide recycling guidance." }
+        getVideoResponseUSecAse.getVideoResponse(videoUri, finalPrompt).collect { result ->
+            when (result) {
+                is ResultState.Loading -> {
                 }
-            } catch (e: Exception) {
-                _chatState.update {
-                    it.copy(
-                        error = e.message ?: "An unknown error occurred",
-                        isLoading = false
-                    )
+                is ResultState.Success -> {
+                    _chatState.update { state ->
+                        state.copy(
+                            messages = state.messages + Message(
+                                text = result.data,
+                                isFromUser = false
+                            ),
+                            isLoading = false
+                        )
+                    }
+                }
+                is ResultState.Error -> {
+                    _chatState.update { state ->
+                        state.copy(
+                            error = result.error,
+                            isLoading = false
+                        )
+                    }
                 }
             }
         }
+    }
+
+
+
+    private fun getMimeType(context: Context, uri: Uri): String? {
+        return context.contentResolver.getType(uri)
+    }
+
+    private fun isImage(context: Context, uri: Uri?): Boolean {
+        if (uri == null) return false
+        val mimeType = getMimeType(context, uri)
+        return mimeType?.startsWith("image/") == true
+    }
+
+    private fun isVideo(context: Context, uri: Uri?): Boolean {
+        if (uri == null) return false
+        val mimeType = getMimeType(context, uri)
+        return mimeType?.startsWith("video/") == true
     }
 }

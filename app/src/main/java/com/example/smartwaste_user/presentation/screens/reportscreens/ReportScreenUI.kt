@@ -1,5 +1,6 @@
 package com.example.smartwaste_user.presentation.screens.reportscreens
 
+import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,14 +17,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.UiComposable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -31,6 +35,9 @@ import coil3.compose.AsyncImage
 import com.example.smartwaste_user.data.models.ReportModel
 import com.example.smartwaste_user.presentation.navigation.Routes
 import com.example.smartwaste_user.presentation.viewmodels.ReportViewModel
+import com.zegocloud.uikit.prebuilt.call.ZegoUIKitPrebuiltCallConfig
+import com.zegocloud.uikit.prebuilt.call.invite.widget.ZegoSendCallInvitationButton
+import com.zegocloud.uikit.service.defines.ZegoUIKitUser
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -179,6 +186,7 @@ private fun ReportItem(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -276,9 +284,12 @@ private fun ReportItem(
                     }
                 }
             }
+
+
         }
     }
 }
+
 
 @Composable
 fun InfoRow(icon: ImageVector, label: String, value: String) {
@@ -312,7 +323,11 @@ fun AttachmentThumbnail(attachmentUriString: String) {
             .size(64.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), RoundedCornerShape(8.dp)),
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                RoundedCornerShape(8.dp)
+            ),
         contentAlignment = Alignment.Center
     ) {
         AsyncImage(
@@ -422,3 +437,4 @@ private fun formatReportDate(dateString: String): String {
         dateString
     }
 }
+

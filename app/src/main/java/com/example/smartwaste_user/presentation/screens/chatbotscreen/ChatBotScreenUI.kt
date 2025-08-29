@@ -1,6 +1,10 @@
 package com.example.smartwaste_user.presentation.screens.chatbotscreen
 
+import android.content.Context
 import android.net.Uri
+import android.provider.MediaStore
+import android.webkit.MimeTypeMap
+import android.widget.VideoView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -11,6 +15,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
@@ -23,35 +28,38 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -60,16 +68,16 @@ import com.example.smartwaste_user.presentation.viewmodels.geminiviewmodel.Gemin
 import com.example.smartwaste_user.presentation.viewmodels.geminiviewmodel.Message
 import kotlinx.coroutines.launch
 
+// Color Palette (kept from original)
 private val GrayBackground = Color(0xFF121212)
-private val GraySurface = Color(0x991E1E1E) // Semi-transparent for glassmorphism
+private val GraySurface = Color(0x991E1E1E)
 private val GraySurfaceVariant = Color(0xFF2C2C2C)
 private val PrimaryGreen = Color(0xFF2ECC71)
 private val PrimaryGreenVariant = Color(0xFF27AE60)
 private val OnSurfaceText = Color(0xFFE0E0E0)
 private val OnSurfaceTextVariant = Color(0xFFBDBDBD)
 private val UserMessageBg = Color(0xFF25332C)
-private val BotMessageBg = Color(0xAA2A2A2A) // Semi-transparent bot message bg
-
+private val BotMessageBg = Color(0xAA2A2A2A)
 private val GoldStart = Color(0xFFF7D060)
 private val GoldEnd = Color(0xFFEAB543)
 
@@ -82,77 +90,85 @@ fun ChatBotScreenUI(
 ) {
     val chatState by viewModel.chatState.collectAsState()
     val listState = rememberLazyListState()
-    val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
+
+    // State to hold the selected media URI before sending
+    var selectedUri by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let {
-            viewModel.sendImagePrompt(it, "Analyze this waste image and provide recycling guidance")
-        }
+        selectedUri = uri
+    }
+
+    val videoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedUri = uri
     }
 
     LaunchedEffect(chatState.messages.size) {
         if (chatState.messages.isNotEmpty()) {
-            listState.animateScrollToItem(chatState.messages.size - 1)
+            coroutineScope.launch {
+                listState.animateScrollToItem(chatState.messages.size - 1)
+            }
         }
     }
 
-
-
-        Scaffold(
-
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Eco,
-                                contentDescription = "Eco Icon",
-                                tint = PrimaryGreen,
-                                modifier = Modifier.size(32.dp)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Eco,
+                            contentDescription = "Eco Icon",
+                            tint = PrimaryGreen,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Column {
+                            Text(
+                                "SmartWaste Assistant",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = OnSurfaceText
                             )
-                            Column {
-                                Text(
-                                    "SmartWaste Assistant",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
-                                    color = OnSurfaceText
-                                )
-                                Text(
-                                    "Your AI Helper",
-                                    fontSize = 12.sp,
-                                    color = OnSurfaceTextVariant,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
+                            Text(
+                                "Your AI Helper",
+                                fontSize = 12.sp,
+                                color = OnSurfaceTextVariant,
+                                fontWeight = FontWeight.Medium
+                            )
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(10, 59, 18)
-                    ),
-                    modifier = Modifier.clip(RoundedCornerShape(32.dp))
-                )
-            },
-        ) { paddingValues ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                Image(
-                    painter = painterResource(id = R.drawable.chatbackground), // Replace with your background image
-                    contentDescription = "Background",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .blur(radius = 20.dp)
-                )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(10, 59, 18, 200) // Slightly transparent
+                ),
+            )
+        },
+        containerColor = Color.Transparent // Make scaffold background transparent
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.chatbackground), // Your background image
+                contentDescription = "Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .blur(radius = 20.dp)
+            )
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.6f))
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.6f))
+            )
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -186,18 +202,20 @@ fun ChatBotScreenUI(
                 }
 
                 MessageInput(
-                    onSendMessage = { prompt ->
-                        viewModel.sendMessage(prompt)
-                        keyboardController?.hide()
+                    onSendMessage = { prompt, uri ->
+                        viewModel.sendMessage(prompt, uri)
+                        selectedUri = null
                     },
-                    onImageSelected = {
-                        imagePickerLauncher.launch("image/*")
-                    }
+                    onImageSelected = { imagePickerLauncher.launch("image/*") },
+                    onVideoSelected = { videoPickerLauncher.launch("video/*") },
+                    selectedUri = selectedUri,
+                    onClearMedia = { selectedUri = null }
                 )
             }
         }
     }
 }
+
 
 @Composable
 fun WelcomeMessage() {
@@ -306,6 +324,22 @@ fun ChatMessageItem(message: Message) {
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
+
+                if (message.videoUri != null) {
+                    AndroidView(
+                        factory = { context ->
+                            VideoView(context).apply {
+                                setVideoURI(message.videoUri)
+                                setOnPreparedListener { it.isLooping = true; start() }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
                 Text(
                     text = message.text,
                     color = OnSurfaceText,
@@ -387,92 +421,159 @@ fun TypingIndicator() {
     }
 }
 
+
 @Composable
 fun MessageInput(
-    onSendMessage: (String) -> Unit,
-    onImageSelected: () -> Unit
+    onSendMessage: (String, Uri?) -> Unit,
+    onImageSelected: () -> Unit,
+    onVideoSelected: () -> Unit,
+    selectedUri: Uri?,
+    onClearMedia: () -> Unit
 ) {
     var text by remember { mutableStateOf("") }
-    val isTextValid = text.trim().isNotEmpty()
+    val canSend = text.trim().isNotEmpty() || selectedUri != null
 
-    Surface(
-        color = Color.Transparent, // Make surface transparent
-        modifier = Modifier.fillMaxWidth()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.Transparent)
+            .padding(horizontal = 8.dp, vertical = 8.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        AnimatedVisibility(
+            visible = selectedUri != null,
+            enter = fadeIn() + slideInVertically(),
+            exit = fadeOut() + shrinkVertically()
         ) {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                placeholder = {
-                    Text(
-                        "Ask about recycling...",
-                        color = OnSurfaceTextVariant.copy(alpha = 0.7f),
-                        fontSize = 14.sp
-                    )
-                },
+            MediaPreview(uri = selectedUri, onClearMedia = onClearMedia)
+        }
+
+        Surface(
+            color = GraySurface,
+            shape = RoundedCornerShape(28.dp),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(24.dp)),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Send
-                ),
-                keyboardActions = KeyboardActions(
-                    onSend = {
-                        if (isTextValid) {
-                            onSendMessage(text.trim())
-                            text = ""
-                        }
-                    }
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedContainerColor = GraySurface,
-                    unfocusedContainerColor = GraySurface,
-                    focusedTextColor = OnSurfaceText,
-                    unfocusedTextColor = OnSurfaceText
-                ),
-                shape = RoundedCornerShape(24.dp),
-                maxLines = 4,
-                textStyle = LocalTextStyle.current.copy(fontSize = 16.sp),
-                leadingIcon = {
-                    IconButton(onClick = onImageSelected) {
-                        Icon(
-                            Icons.Default.AddPhotoAlternate,
-                            contentDescription = "Add Image",
-                            tint = PrimaryGreen
+                    .padding(horizontal = 8.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onImageSelected) {
+                    Icon(
+                        Icons.Default.AddPhotoAlternate,
+                        contentDescription = "Add Image",
+                        tint = OnSurfaceTextVariant
+                    )
+                }
+
+                IconButton(onClick = onVideoSelected) {
+                    Icon(
+                        Icons.Default.Videocam,
+                        contentDescription = "Add Video",
+                        tint = OnSurfaceTextVariant
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(vertical = 8.dp, horizontal = 4.dp)
+                ) {
+                    BasicTextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        textStyle = TextStyle(color = OnSurfaceText, fontSize = 16.sp),
+                        cursorBrush = SolidColor(PrimaryGreen),
+                        maxLines = 4,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                        keyboardActions = KeyboardActions(onSend = {
+                            if (canSend) {
+                                onSendMessage(text.trim(), selectedUri)
+                                text = ""
+                            }
+                        })
+                    )
+                    if (text.isEmpty()) {
+                        Text(
+                            text = "Ask about waste...",
+                            color = OnSurfaceTextVariant.copy(alpha = 0.7f),
+                            fontSize = 16.sp
                         )
                     }
                 }
+
+                IconButton(
+                    onClick = {
+                        if (canSend) {
+                            onSendMessage(text.trim(), selectedUri)
+                            text = ""
+                        }
+                    },
+                    enabled = canSend,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(if (canSend) PrimaryGreen else GraySurfaceVariant)
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Send Message",
+                        tint = if (canSend) Color.White else OnSurfaceTextVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MediaPreview(uri: Uri?, onClearMedia: () -> Unit) {
+    if (uri == null) return
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp, start = 48.dp, end = 48.dp)
+            .height(100.dp),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)),
+        colors = CardDefaults.cardColors(containerColor = GraySurfaceVariant)
+    ) {
+        Box(contentAlignment = Alignment.TopEnd) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(uri)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Selected Media Preview",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp)),
+                contentScale = ContentScale.Crop
             )
 
             IconButton(
-                onClick = {
-                    if (isTextValid) {
-                        onSendMessage(text.trim())
-                        text = ""
-                    }
-                },
-                enabled = isTextValid,
+                onClick = onClearMedia,
                 modifier = Modifier
-                    .size(48.dp)
+                    .padding(4.dp)
                     .clip(CircleShape)
-                    .background(if (isTextValid) PrimaryGreen else GraySurfaceVariant)
+                    .size(24.dp)
+                    .background(Color.Black.copy(alpha = 0.5f))
             ) {
                 Icon(
-                    Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Send Message",
-                    tint = if (isTextValid) Color.White else OnSurfaceTextVariant,
-                    modifier = Modifier.size(24.dp)
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Clear Media",
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
     }
+}
+
+fun getMimeType(context: Context, uri: Uri): String? {
+    return context.contentResolver.getType(uri)
 }

@@ -1,5 +1,6 @@
 package com.example.smartwaste_user
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -60,6 +61,8 @@ import com.example.smartwaste_user.presentation.viewmodels.OnboardingViewModel
 import com.example.smartwaste_user.ui.theme.SmartWasteUserTheme
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.zegocloud.uikit.prebuilt.call.ZegoUIKitPrebuiltCallConfig
+import com.zegocloud.uikit.prebuilt.call.invite.widget.ZegoSendCallInvitationButton
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -250,3 +253,5 @@ fun SplashScreen(onFinished: () -> Unit) {
         }
     }
 }
+
+

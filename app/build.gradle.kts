@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.inappmessaging.display)
     implementation(libs.play.services.location)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -134,6 +135,12 @@ dependencies {
     implementation("androidx.compose.foundation:foundation:1.6.0")
 
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
+//    implementation("com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android:+")
+    implementation("com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android:3.9.10")
+// or latest
+
+    implementation("com.github.ZEGOCLOUD:zego_uikit_signaling_plugin_android:+")
 
 
 
