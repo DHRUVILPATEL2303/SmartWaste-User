@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,7 +34,25 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.smartwaste_user.data.models.UserModel
+import com.example.smartwaste_user.presentation.navigation.Routes
 import com.example.smartwaste_user.presentation.viewmodels.UserViewModel
+import com.google.firebase.auth.FirebaseAuth
+
+object ProfileDarkTheme {
+    val background = Color(0xFF0D1117)
+    val surface = Color(0xFF161B22)
+    val surfaceVariant = Color(0xFF21262D)
+    val primary = Color(0xFF58A6FF)
+    val secondary = Color(0xFF79C0FF)
+    val accent = Color(0xFFFF7B72)
+    val success = Color(0xFF56D364)
+    val warning = Color(0xFFE3B341)
+    val textPrimary = Color(0xFFE6EDF3)
+    val textSecondary = Color(0xFF8B949E)
+    val cardBackground = Color(0xFF1C2128)
+    val cardHover = Color(0xFF262C36)
+    val divider = Color(0xFF30363D)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,137 +66,198 @@ fun ProfileScreenUI(
     var showEditDialog by remember { mutableStateOf(false) }
     var showPhotoDialog by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .navigationBarsPadding()
-    ) {
-        TopAppBar(
-            title = {
-                Text(
-                    "My Profile",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            },
-            actions = {
-                IconButton(onClick = { showQRDialog = true }) {
-                    Icon(
-                        Icons.Default.QrCode,
-                        contentDescription = "Show QR Code",
-                        tint = MaterialTheme.colorScheme.onPrimary
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "My Profile",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ProfileDarkTheme.textPrimary
                     )
-                }
-                IconButton(onClick = { /* Handle settings */ }) {
-                    Icon(
-                        Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            ),
-            modifier = Modifier.clip(RoundedCornerShape(20.dp))
-        )
-
-        when {
-            userState.isLoading -> {
-                LoadingState()
-            }
-
-            userState.error.isNotEmpty() -> {
-                ErrorState(
-                    error = userState.error,
-                    onRetry = { viewModel.getUserData() }
-                )
-            }
-
-            userState.succcess != null -> {
-                val user = userState.succcess!!
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    ProfileHeaderCard(
-                        user = user,
-                        onPhotoClick = { showPhotoDialog = true }
-                    )
-
-                    InfoCard(
-                        title = "Contact Information",
-                        icon = Icons.Default.ContactPhone
+                },
+                actions = {
+                    IconButton(
+                        onClick = { showQRDialog = true },
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(
+                                color = ProfileDarkTheme.primary.copy(alpha = 0.1f),
+                                shape = CircleShape
+                            )
                     ) {
-                        ProfileInfoItem(
-                            icon = Icons.Default.Phone,
-                            title = "Phone Number",
-                            value = user.phoneNumber.ifEmpty { "Not provided" }
-                        )
-                        ProfileInfoItem(
-                            icon = Icons.Default.LocationOn,
-                            title = "Address",
-                            value = user.address.ifEmpty { "Not provided" }
+                        Icon(
+                            Icons.Default.QrCode,
+                            contentDescription = "Show QR Code",
+                            tint = ProfileDarkTheme.primary,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
 
-                    InfoCard(
-                        title = "Area Information",
-                        icon = Icons.Default.LocationCity
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = { /* Handle settings */ },
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(
+                                color = ProfileDarkTheme.secondary.copy(alpha = 0.1f),
+                                shape = CircleShape
+                            )
                     ) {
-                        ProfileInfoItem(
-                            icon = Icons.Default.Place,
-                            title = "Area Name",
-                            value = user.areaName.ifEmpty { "Not assigned" }
-                        )
-                        ProfileInfoItem(
-                            icon = Icons.Default.Route,
-                            title = "Route Name",
-                            value = user.routeName.ifEmpty { "Not assigned" }
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = ProfileDarkTheme.secondary,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
-
-                    ActionButtonsSection(
-                        onEditProfile = { showEditDialog = true },
-                        onLogout = { /* Handle logout */ }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = ProfileDarkTheme.cardBackground
+                )
+            )
+        },
+        containerColor = ProfileDarkTheme.background
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            ProfileDarkTheme.background,
+                            ProfileDarkTheme.surface
+                        )
                     )
+                )
+        ) {
+            when {
+                userState.isLoading -> {
+                    LoadingState()
+                }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                userState.error.isNotEmpty() -> {
+                    ErrorState(
+                        error = userState.error,
+                        onRetry = { viewModel.getUserData() }
+                    )
+                }
+
+                userState.succcess != null -> {
+                    val user = userState.succcess!!
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 80.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
+                        item {
+                            ProfileHeaderCard(
+                                user = user,
+                                onPhotoClick = { showPhotoDialog = true }
+                            )
+                        }
+
+                        item {
+                            InfoCard(
+                                title = "Contact Information",
+                                icon = Icons.Default.ContactPhone
+                            ) {
+                                ProfileInfoItem(
+                                    icon = Icons.Default.Phone,
+                                    title = "Phone Number",
+                                    value = user.phoneNumber.ifEmpty { "Not provided" }
+                                )
+                                HorizontalDivider(
+                                    color = ProfileDarkTheme.divider,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                                ProfileInfoItem(
+                                    icon = Icons.Default.LocationOn,
+                                    title = "Address",
+                                    value = user.address.ifEmpty { "Not provided" }
+                                )
+                            }
+                        }
+
+                        item {
+                            InfoCard(
+                                title = "Service Area",
+                                icon = Icons.Default.LocationCity
+                            ) {
+                                ProfileInfoItem(
+                                    icon = Icons.Default.Place,
+                                    title = "Area Name",
+                                    value = user.areaName.ifEmpty { "Not assigned" }
+                                )
+                                HorizontalDivider(
+                                    color = ProfileDarkTheme.divider,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                                ProfileInfoItem(
+                                    icon = Icons.Default.Route,
+                                    title = "Route Name",
+                                    value = user.routeName.ifEmpty { "Not assigned" }
+                                )
+                            }
+                        }
+
+                        item {
+                            ActionButtonsSection(
+                                onEditProfile = { showEditDialog = true },
+                                onLogout = {
+                                    FirebaseAuth.getInstance().signOut()
+                                    navController.navigate(Routes.LoginScreen){
+                                        popUpTo(Routes.HomeScreen){
+                                            inclusive = true
+                                        }
+                                    }
+                                }
+                            )
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
                 }
             }
         }
-    }
 
-    if (showQRDialog) {
-        QRCodeDialog(
-            qrCodeBitmap = qrCodeBitmap,
-            onDismiss = { showQRDialog = false }
-        )
-    }
+        // Dialogs
+        if (showQRDialog) {
+            QRCodeDialog(
+                qrCodeBitmap = qrCodeBitmap,
+                onDismiss = { showQRDialog = false }
+            )
+        }
 
-    if (showEditDialog && userState.succcess != null) {
-        EditProfileDialog(
-            user = userState.succcess!!,
-            onDismiss = { showEditDialog = false },
-            onSave = { updatedUser ->
-                viewModel.updateUserData(updatedUser)
-                showEditDialog = false
-            }
-        )
-    }
+        if (showEditDialog && userState.succcess != null) {
+            EditProfileDialog(
+                user = userState.succcess!!,
+                onDismiss = { showEditDialog = false },
+                onSave = { updatedUser ->
+                    viewModel.updateUserData(updatedUser)
+                    showEditDialog = false
+                }
+            )
+        }
 
-    if (showPhotoDialog && userState.succcess != null) {
-        PhotoViewDialog(
-            user = userState.succcess!!,
-            onDismiss = { showPhotoDialog = false }
-        )
+        if (showPhotoDialog && userState.succcess != null) {
+            PhotoViewDialog(
+                user = userState.succcess!!,
+                onDismiss = { showPhotoDialog = false }
+            )
+        }
     }
 }
 
@@ -187,19 +267,30 @@ private fun LoadingState() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = ProfileDarkTheme.cardBackground
+            ),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(48.dp),
-                strokeWidth = 4.dp
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Loading your profile...",
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Column(
+                modifier = Modifier.padding(40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator(
+                    color = ProfileDarkTheme.primary,
+                    strokeWidth = 3.dp,
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = "Loading your profile...",
+                    fontSize = 16.sp,
+                    color = ProfileDarkTheme.textSecondary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }
@@ -217,40 +308,54 @@ private fun ErrorState(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp),
-            shape = RoundedCornerShape(16.dp)
+            colors = CardDefaults.cardColors(
+                containerColor = ProfileDarkTheme.cardBackground
+            ),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
                     Icons.Default.Error,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(48.dp)
+                    tint = ProfileDarkTheme.accent,
+                    modifier = Modifier.size(64.dp)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
                 Text(
                     text = "Something went wrong",
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
+                    color = ProfileDarkTheme.textPrimary,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = error,
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                    color = ProfileDarkTheme.textSecondary,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
                 )
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = onRetry,
-                    shape = RoundedCornerShape(12.dp)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ProfileDarkTheme.primary
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Refresh, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Try Again")
+                    Text(
+                        "Try Again",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }
@@ -264,108 +369,135 @@ private fun ProfileHeaderCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = ProfileDarkTheme.cardBackground
+        ),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clickable { onPhotoClick() }
-            ) {
-                if (user.profileImageUrl.isNotEmpty()) {
-                    AsyncImage(
-                        model = user.profileImageUrl,
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                            .border(3.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                        contentScale = ContentScale.Crop
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            ProfileDarkTheme.primary.copy(alpha = 0.1f),
+                            Color.Transparent
+                        ),
+                        radius = 400f
                     )
-                } else {
-                    Box(
+                )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(140.dp)
+                        .clickable { onPhotoClick() }
+                ) {
+                    if (user.profileImageUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = user.profileImageUrl,
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .border(4.dp, ProfileDarkTheme.primary, CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .background(
+                                    brush = Brush.radialGradient(
+                                        colors = listOf(
+                                            ProfileDarkTheme.primary.copy(alpha = 0.2f),
+                                            ProfileDarkTheme.primary.copy(alpha = 0.1f)
+                                        )
+                                    )
+                                )
+                                .border(4.dp, ProfileDarkTheme.primary, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = user.name.firstOrNull()?.uppercase() ?: "U",
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ProfileDarkTheme.primary
+                            )
+                        }
+                    }
+
+                    Surface(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer)
-                            .border(3.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                        contentAlignment = Alignment.Center
+                            .align(Alignment.BottomEnd)
+                            .size(40.dp),
+                        shape = CircleShape,
+                        color = ProfileDarkTheme.primary,
+                        shadowElevation = 4.dp
                     ) {
-                        Text(
-                            text = user.name.firstOrNull()?.uppercase() ?: "U",
-                            fontSize = 36.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        Icon(
+                            Icons.Default.CameraAlt,
+                            contentDescription = "View Photo",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp)
                         )
                     }
                 }
 
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(32.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    shadowElevation = 2.dp
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = user.name,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ProfileDarkTheme.textPrimary,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = user.email,
+                    fontSize = 16.sp,
+                    color = ProfileDarkTheme.textSecondary,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = ProfileDarkTheme.success.copy(alpha = 0.1f)
+                    ),
+                    shape = RoundedCornerShape(20.dp)
                 ) {
-                    Icon(
-                        Icons.Default.CameraAlt,
-                        contentDescription = "View Photo",
-                        tint = Color.White,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(6.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = user.name,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = user.email,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.Star,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${user.totalPoints} Points",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Star,
+                            contentDescription = null,
+                            tint = ProfileDarkTheme.success,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "${user.totalPoints} Points",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ProfileDarkTheme.success
+                        )
+                    }
                 }
             }
         }
@@ -380,30 +512,44 @@ private fun InfoCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = ProfileDarkTheme.cardBackground
+        ),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(24.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            color = ProfileDarkTheme.primary.copy(alpha = 0.15f),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = ProfileDarkTheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = title,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = ProfileDarkTheme.textPrimary
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             content()
         }
     }
@@ -424,7 +570,7 @@ private fun ProfileInfoItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = ProfileDarkTheme.textSecondary,
             modifier = Modifier.size(20.dp)
         )
 
@@ -433,15 +579,16 @@ private fun ProfileInfoItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 13.sp,
+                color = ProfileDarkTheme.textSecondary,
                 fontWeight = FontWeight.Medium
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Normal
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                color = ProfileDarkTheme.textPrimary
             )
         }
     }
@@ -454,21 +601,27 @@ private fun ActionButtonsSection(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Button(
             onClick = onEditProfile,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(16.dp)
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ProfileDarkTheme.primary
+            ),
+            shape = RoundedCornerShape(16.dp),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 4.dp
+            )
         ) {
             Icon(
                 Icons.Default.Edit,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
                 "Edit Profile",
                 fontSize = 16.sp,
@@ -480,22 +633,23 @@ private fun ActionButtonsSection(
             onClick = onLogout,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp),
+                .height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.error)
+            border = BorderStroke(1.5.dp, ProfileDarkTheme.accent),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = ProfileDarkTheme.accent
+            )
         ) {
             Icon(
                 Icons.Default.ExitToApp,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.error
+                modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
                 "Logout",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.error
+                fontWeight = FontWeight.Medium
             )
         }
     }
@@ -517,7 +671,7 @@ private fun PhotoViewDialog(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black)
+                .background(Color.Black.copy(alpha = 0.9f))
                 .clickable { onDismiss() },
             contentAlignment = Alignment.Center
         ) {
@@ -525,71 +679,81 @@ private fun PhotoViewDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(20.dp)
             ) {
-                Row(
+                // Header
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    colors = CardDefaults.cardColors(
+                        containerColor = ProfileDarkTheme.cardBackground.copy(alpha = 0.9f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (user.profileImageUrl.isNotEmpty()) {
-                            AsyncImage(
-                                model = user.profileImageUrl,
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(MaterialTheme.colorScheme.primary),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = user.name.firstOrNull()?.uppercase() ?: "U",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                        ) {
+                            if (user.profileImageUrl.isNotEmpty()) {
+                                AsyncImage(
+                                    model = user.profileImageUrl,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
                                 )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(ProfileDarkTheme.primary),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = user.name.firstOrNull()?.uppercase() ?: "U",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
 
-                    Column {
-                        Text(
-                            text = user.name,
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Profile Photo",
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontSize = 12.sp
-                        )
-                    }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = user.name,
+                                color = ProfileDarkTheme.textPrimary,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Profile Photo",
+                                color = ProfileDarkTheme.textSecondary,
+                                fontSize = 12.sp
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = Color.White
-                        )
+                        IconButton(onClick = onDismiss) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = ProfileDarkTheme.textSecondary
+                            )
+                        }
                     }
                 }
 
+                // Photo
                 Card(
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.size(300.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.size(320.dp)
                 ) {
                     if (user.profileImageUrl.isNotEmpty()) {
                         AsyncImage(
@@ -602,14 +766,21 @@ private fun PhotoViewDialog(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.primaryContainer),
+                                .background(
+                                    brush = Brush.radialGradient(
+                                        colors = listOf(
+                                            ProfileDarkTheme.primary.copy(alpha = 0.3f),
+                                            ProfileDarkTheme.cardBackground
+                                        )
+                                    )
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = user.name.firstOrNull()?.uppercase() ?: "U",
-                                fontSize = 80.sp,
+                                fontSize = 120.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                color = ProfileDarkTheme.primary
                             )
                         }
                     }
@@ -626,11 +797,14 @@ private fun QRCodeDialog(
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = ProfileDarkTheme.cardBackground
+            ),
+            shape = RoundedCornerShape(24.dp),
             modifier = Modifier.padding(16.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(
@@ -639,51 +813,57 @@ private fun QRCodeDialog(
                     Icon(
                         Icons.Default.QrCode,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
+                        tint = ProfileDarkTheme.primary,
+                        modifier = Modifier.size(28.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = "Your QR Code",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ProfileDarkTheme.textPrimary
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 qrCodeBitmap?.let { bitmap ->
                     Card(
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
                         Image(
                             bitmap = bitmap.asImageBitmap(),
                             contentDescription = "User QR Code",
                             modifier = Modifier
-                                .size(250.dp)
-                                .padding(16.dp)
+                                .size(280.dp)
+                                .padding(20.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "Scan this code to share your profile",
+                    text = "Scan this code to share your profile information",
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                    color = ProfileDarkTheme.textSecondary,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     OutlinedButton(
                         onClick = { /* Handle share */ },
-                        shape = RoundedCornerShape(12.dp)
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = ProfileDarkTheme.primary
+                        ),
+                        border = BorderStroke(1.dp, ProfileDarkTheme.primary),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
@@ -692,7 +872,10 @@ private fun QRCodeDialog(
 
                     Button(
                         onClick = onDismiss,
-                        shape = RoundedCornerShape(12.dp)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ProfileDarkTheme.primary
+                        ),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
                         Text("Close")
                     }
@@ -718,7 +901,10 @@ private fun EditProfileDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = ProfileDarkTheme.cardBackground
+            ),
+            shape = RoundedCornerShape(24.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
@@ -736,28 +922,36 @@ private fun EditProfileDialog(
                 ) {
                     Text(
                         text = "Edit Profile",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ProfileDarkTheme.textPrimary
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Close"
+                            contentDescription = "Close",
+                            tint = ProfileDarkTheme.textSecondary
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Full Name") },
+                    label = { Text("Full Name", color = ProfileDarkTheme.textSecondary) },
                     leadingIcon = {
-                        Icon(Icons.Default.Person, contentDescription = null)
+                        Icon(Icons.Default.Person, contentDescription = null, tint = ProfileDarkTheme.primary)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ProfileDarkTheme.primary,
+                        unfocusedBorderColor = ProfileDarkTheme.divider,
+                        focusedTextColor = ProfileDarkTheme.textPrimary,
+                        unfocusedTextColor = ProfileDarkTheme.textPrimary
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -765,13 +959,17 @@ private fun EditProfileDialog(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { },
-                    label = { Text("Email") },
+                    label = { Text("Email", color = ProfileDarkTheme.textSecondary) },
                     leadingIcon = {
-                        Icon(Icons.Default.Email, contentDescription = null)
+                        Icon(Icons.Default.Email, contentDescription = null, tint = ProfileDarkTheme.textSecondary)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = false,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledBorderColor = ProfileDarkTheme.divider,
+                        disabledTextColor = ProfileDarkTheme.textSecondary
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -779,12 +977,18 @@ private fun EditProfileDialog(
                 OutlinedTextField(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
-                    label = { Text("Phone Number") },
+                    label = { Text("Phone Number", color = ProfileDarkTheme.textSecondary) },
                     leadingIcon = {
-                        Icon(Icons.Default.Phone, contentDescription = null)
+                        Icon(Icons.Default.Phone, contentDescription = null, tint = ProfileDarkTheme.primary)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ProfileDarkTheme.primary,
+                        unfocusedBorderColor = ProfileDarkTheme.divider,
+                        focusedTextColor = ProfileDarkTheme.textPrimary,
+                        unfocusedTextColor = ProfileDarkTheme.textPrimary
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -792,13 +996,19 @@ private fun EditProfileDialog(
                 OutlinedTextField(
                     value = address,
                     onValueChange = { address = it },
-                    label = { Text("Address") },
+                    label = { Text("Address", color = ProfileDarkTheme.textSecondary) },
                     leadingIcon = {
-                        Icon(Icons.Default.LocationOn, contentDescription = null)
+                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = ProfileDarkTheme.primary)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ProfileDarkTheme.primary,
+                        unfocusedBorderColor = ProfileDarkTheme.divider,
+                        focusedTextColor = ProfileDarkTheme.textPrimary,
+                        unfocusedTextColor = ProfileDarkTheme.textPrimary
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -806,12 +1016,18 @@ private fun EditProfileDialog(
                 OutlinedTextField(
                     value = areaName,
                     onValueChange = { areaName = it },
-                    label = { Text("Area Name") },
+                    label = { Text("Area Name", color = ProfileDarkTheme.textSecondary) },
                     leadingIcon = {
-                        Icon(Icons.Default.Place, contentDescription = null)
+                        Icon(Icons.Default.Place, contentDescription = null, tint = ProfileDarkTheme.primary)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ProfileDarkTheme.primary,
+                        unfocusedBorderColor = ProfileDarkTheme.divider,
+                        focusedTextColor = ProfileDarkTheme.textPrimary,
+                        unfocusedTextColor = ProfileDarkTheme.textPrimary
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -819,28 +1035,38 @@ private fun EditProfileDialog(
                 OutlinedTextField(
                     value = routeName,
                     onValueChange = { routeName = it },
-                    label = { Text("Route Name") },
+                    label = { Text("Route Name", color = ProfileDarkTheme.textSecondary) },
                     leadingIcon = {
-                        Icon(Icons.Default.Route, contentDescription = null)
+                        Icon(Icons.Default.Route, contentDescription = null, tint = ProfileDarkTheme.primary)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ProfileDarkTheme.primary,
+                        unfocusedBorderColor = ProfileDarkTheme.divider,
+                        focusedTextColor = ProfileDarkTheme.textPrimary,
+                        unfocusedTextColor = ProfileDarkTheme.textPrimary
+                    )
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
+                            .height(52.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = ProfileDarkTheme.textSecondary
+                        ),
+                        border = BorderStroke(1.dp, ProfileDarkTheme.divider),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text("Cancel")
+                        Text("Cancel", fontSize = 16.sp, fontWeight = FontWeight.Medium)
                     }
 
                     Button(
@@ -856,16 +1082,19 @@ private fun EditProfileDialog(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
+                            .height(52.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ProfileDarkTheme.primary
+                        ),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
                         Icon(
                             Icons.Default.Save,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Save")
+                        Text("Save", fontSize = 16.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }

@@ -13,3 +13,5 @@ const val EXTRA_SERVICE_PATH="extra_services"
 const val HOLIDAY_PATH="holidays"
 
 const val FCM_PATH="fcm_tokens"
+
+const val EDITORIAL_PATH="ediorial"

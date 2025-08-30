@@ -78,19 +78,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             SmartWasteUserTheme {
-                var showCustomSplash by remember { mutableStateOf(true) }
-
-                val mainAppContent: @Composable () -> Unit = {
+                var showCustomSplash by remember { mutableStateOf(false) }
+//
+//                val mainAppContent: @Composable () -> Unit = {
                     val authViewModel: AuthViewModel = hiltViewModel()
                     val onboardingViewModel: OnboardingViewModel = hiltViewModel()
-
-                    AppNavigation(
-                        viewModel = authViewModel,
-                        onboardingViewModel = onboardingViewModel,
-                        shouldShowOnboarding = false,
-                        currentUser = Firebase.auth.currentUser
-                    )
-                }
+//
+//                    AppNavigation(
+//                        viewModel = authViewModel,
+//                        onboardingViewModel = onboardingViewModel,
+//                        shouldShowOnboarding = false,
+//                        currentUser = Firebase.auth.currentUser
+//                    )
+//                }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -102,16 +102,15 @@ class MainActivity : ComponentActivity() {
                             enter = fadeIn(animationSpec = tween(durationMillis = 800, delayMillis = 200)),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            mainAppContent()
+                            AppNavigation(
+                        viewModel = authViewModel,
+                        onboardingViewModel = onboardingViewModel,
+                        shouldShowOnboarding = false,
+                        currentUser = Firebase.auth.currentUser
+                    )
                         }
 
-                        AnimatedVisibility(
-                            visible = showCustomSplash,
-                            exit = fadeOut(animationSpec = tween(durationMillis = 600, easing = EaseInOutCubic)),
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            SplashScreen(onFinished = { showCustomSplash = false })
-                        }
+
                     }
                 }
             }

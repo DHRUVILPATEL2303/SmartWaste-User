@@ -25,8 +25,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -35,6 +37,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
@@ -66,6 +69,27 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.UUID
+
+
+object HomeDarkTheme {
+    val background = Color(0xFF0D1117)
+    val surface = Color(0xFF161B22)
+    val surfaceVariant = Color(0xFF21262D)
+    val primary = Color(0xFF2ECC71)
+    val primaryVariant = Color(0xFF27AE60)
+    val secondary = Color(0xFF58A6FF)
+    val accent = Color(0xFFE3B341)
+    val error = Color(0xFFFF6B6B)
+    val success = Color(0xFF56D364)
+    val warning = Color(0xFFFFA726)
+    val textPrimary = Color(0xFFE6EDF3)
+    val textSecondary = Color(0xFF8B949E)
+    val cardBackground = Color(0xFF1C2128)
+    val cardHover = Color(0xFF262C36)
+    val borderColor = Color(0xFF30363D)
+    val gradientStart = Color(0xFF1E40AF)
+    val gradientEnd = Color(0xFF3B82F6)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,82 +129,111 @@ fun HomeScreenUI(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            val user = userState.succcess
-            val isAreaSelected = user?.areaId?.isNotEmpty() == true
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        HomeDarkTheme.background,
+                        HomeDarkTheme.surface
+                    )
+                )
+            )
+    ) {
+        Scaffold(
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    snackbar = { snackbarData ->
+                        Snackbar(
+                            snackbarData = snackbarData,
+                            containerColor = if (snackbarData.visuals.message.contains("success", true))
+                                HomeDarkTheme.success else HomeDarkTheme.error,
+                            contentColor = Color.White,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    }
+                )
+            },
+            topBar = {
+                val user = userState.succcess
+                val isAreaSelected = user?.areaId?.isNotEmpty() == true
 
-            CleanTopAppBar(
-                isAreaSelected = isAreaSelected,
-                onMapClick = {
-
-                    user?.routeId?.let { routeId ->
-                        if (routeId.isNotEmpty()) {
-                            navController.navigate(Routes.RouteMapScreen(routeId = routeId))
+                DarkTopAppBar(
+                    isAreaSelected = isAreaSelected,
+                    onMapClick = {
+                        user?.routeId?.let { routeId ->
+                            if (routeId.isNotEmpty()) {
+                                navController.navigate(Routes.RouteMapScreen(routeId = routeId))
+                            }
                         }
                     }
-                }
-            )
-        },
-        containerColor = Color(0xFFF8FAFC)
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            when {
-                userState.isLoading -> CleanLoadingState("Setting up your dashboard...")
-                userState.error.isNotEmpty() -> CleanErrorState(message = userState.error)
-                userState.succcess != null -> {
-                    val user = userState.succcess!!
-                    if (user.areaId.isEmpty() || user.areaName.isEmpty()) {
-                        CleanAreaSelectionScreen(
-                            routeProgressState = routeProgressState,
-                            onAreaSelected = { routeId, routeName, areaId, areaName ->
-                                userViewModel.updateUserData(
-                                    user.copy(
-                                        routeId = routeId,
-                                        routeName = routeName,
-                                        areaId = areaId,
-                                        areaName = areaName
+                )
+            },
+            containerColor = Color.Transparent
+        ) { padding ->
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp)
+                    .padding(bottom = 60.dp )
+            ) {
+                when {
+                    userState.isLoading -> DarkLoadingState("Setting up your dashboard...")
+                    userState.error.isNotEmpty() -> DarkErrorState(message = userState.error)
+                    userState.succcess != null -> {
+                        val user = userState.succcess!!
+                        if (user.areaId.isEmpty() || user.areaName.isEmpty()) {
+                            DarkAreaSelectionContent(
+                                routeProgressState = routeProgressState,
+                                onAreaSelected = { routeId, routeName, areaId, areaName ->
+                                    userViewModel.updateUserData(
+                                        user.copy(
+                                            routeId = routeId,
+                                            routeName = routeName,
+                                            areaId = areaId,
+                                            areaName = areaName
+                                        )
                                     )
-                                )
-                            }
-                        )
-                    } else {
-                        CleanRouteStatusScreen(
-                            user = user,
-                            routeProgressState = routeProgressState,
-                            workerFeedBackViewModel = workerFeedBackViewModel
-                        )
+                                }
+                            )
+                        } else {
+                            DarkRouteStatusContent(
+                                user = user,
+                                routeProgressState = routeProgressState,
+                                workerFeedBackViewModel = workerFeedBackViewModel
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        if (showVerifyDialog && !isVerified) {
-            CleanEmailVerificationDialog(
-                onDismiss = { /* Optional */ },
-                onRefresh = {
-                    val user = FirebaseAuth.getInstance().currentUser
-                    user?.reload()?.addOnCompleteListener {
-                        if (user.isEmailVerified) {
-                            isVerified = true
-                            showVerifyDialog = false
+            if (showVerifyDialog && !isVerified) {
+                DarkEmailVerificationDialog(
+                    onDismiss = { /* Optional */ },
+                    onRefresh = {
+                        val user = FirebaseAuth.getInstance().currentUser
+                        user?.reload()?.addOnCompleteListener {
+                            if (user.isEmailVerified) {
+                                isVerified = true
+                                showVerifyDialog = false
+                            }
                         }
-                    }
-                },
-                onResend = { FirebaseAuth.getInstance().currentUser?.sendEmailVerification() }
-            )
+                    },
+                    onResend = { FirebaseAuth.getInstance().currentUser?.sendEmailVerification() }
+                )
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CleanTopAppBar(
+fun DarkTopAppBar(
     isAreaSelected: Boolean,
     onMapClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -193,18 +246,23 @@ fun CleanTopAppBar(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(48.dp)
                         .background(
-                            Color.White.copy(alpha = 0.25f),
-                            CircleShape
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    HomeDarkTheme.primary.copy(alpha = 0.3f),
+                                    HomeDarkTheme.primary.copy(alpha = 0.1f)
+                                )
+                            ),
+                            shape = CircleShape
                         )
-                        .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape),
+                        .border(1.dp, HomeDarkTheme.primary.copy(alpha = 0.3f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Default.FireTruck,
+                        Icons.Default.Eco,
                         contentDescription = "SmartWaste",
-                        tint = Color.White,
+                        tint = HomeDarkTheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -216,7 +274,7 @@ fun CleanTopAppBar(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.3.sp
                         ),
-                        color = Color.White,
+                        color = HomeDarkTheme.textPrimary,
                         modifier = Modifier.animateContentSize()
                     )
                     AnimatedVisibility(
@@ -227,7 +285,7 @@ fun CleanTopAppBar(
                         Text(
                             text = "Live tracking active",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.8f),
+                            color = HomeDarkTheme.textSecondary,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -235,17 +293,28 @@ fun CleanTopAppBar(
             }
         },
         actions = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 AnimatedVisibility(
                     visible = isAreaSelected,
                     enter = fadeIn(animationSpec = tween(400)) + scaleIn(),
                     exit = fadeOut() + scaleOut()
                 ) {
-                    IconButton(onClick = onMapClick) {
+                    IconButton(
+                        onClick = onMapClick,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                HomeDarkTheme.secondary.copy(alpha = 0.15f),
+                                CircleShape
+                            )
+                    ) {
                         Icon(
                             Icons.Default.Map,
                             contentDescription = "Open Map",
-                            tint = Color.White
+                            tint = HomeDarkTheme.secondary
                         )
                     }
                 }
@@ -255,14 +324,15 @@ fun CleanTopAppBar(
                     enter = fadeIn(animationSpec = tween(400)) + scaleIn(),
                     exit = fadeOut() + scaleOut()
                 ) {
-                    Surface(
-                        modifier = Modifier.padding(end = 16.dp).height(28.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color.White.copy(alpha = 0.2f),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = HomeDarkTheme.success.copy(alpha = 0.15f)
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(1.dp, HomeDarkTheme.success.copy(alpha = 0.3f))
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 12.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
@@ -280,40 +350,33 @@ fun CleanTopAppBar(
                                 modifier = Modifier
                                     .size(6.dp)
                                     .scale(pulseScale)
-                                    .background(Color(0xFF10B981), CircleShape)
+                                    .background(HomeDarkTheme.success, CircleShape)
                             )
                             Text(
                                 text = "LIVE",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 11.sp,
-                                color = Color.White,
+                                color = HomeDarkTheme.success,
                                 letterSpacing = 0.8.sp
                             )
                         }
                     }
                 }
+                Spacer(modifier = Modifier.width(16.dp))
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = HomeDarkTheme.cardBackground.copy(alpha = 0.95f)
+        ),
         modifier = modifier
-            .height(100.dp)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF1E40AF), Color(0xFF3B82F6))
-                ),
-                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
-            )
-            .padding(horizontal = 20.dp),
-        windowInsets = WindowInsets.statusBars
     )
 }
 
-
 @Composable
-fun CleanLoadingState(message: String) {
+fun DarkLoadingState(message: String) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(40.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -328,116 +391,139 @@ fun CleanLoadingState(message: String) {
             label = "rotation"
         )
 
-        Box(
-            modifier = Modifier
-                .size(80.dp)
-                .graphicsLayer(rotationZ = rotation),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(80.dp),
-                color = Color(0xFF3B82F6),
-                strokeWidth = 4.dp,
-                strokeCap = StrokeCap.Round
-            )
-            Icon(
-                Icons.Default.Recycling,
-                contentDescription = null,
-                tint = Color(0xFF3B82F6),
-                modifier = Modifier.size(28.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Text(
-            message,
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.Medium
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = HomeDarkTheme.cardBackground
             ),
-            color = Color(0xFF374151),
-            textAlign = TextAlign.Center
-        )
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            border = BorderStroke(1.dp, HomeDarkTheme.borderColor)
+        ) {
+            Column(
+                modifier = Modifier.padding(40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .graphicsLayer(rotationZ = rotation),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(80.dp),
+                        color = HomeDarkTheme.primary,
+                        strokeWidth = 4.dp,
+                        strokeCap = StrokeCap.Round
+                    )
+                    Icon(
+                        Icons.Default.Recycling,
+                        contentDescription = null,
+                        tint = HomeDarkTheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
 
-        Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    message,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = HomeDarkTheme.textPrimary,
+                    textAlign = TextAlign.Center
+                )
 
-        LinearProgressIndicator(
-            modifier = Modifier
-                .width(200.dp)
-                .height(4.dp)
-                .clip(RoundedCornerShape(2.dp)),
-            color = Color(0xFF3B82F6),
-            trackColor = Color(0xFFE5E7EB)
-        )
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .width(200.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp)),
+                    color = HomeDarkTheme.primary,
+                    trackColor = HomeDarkTheme.borderColor
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun CleanErrorState(message: String) {
+fun DarkErrorState(message: String) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(40.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .background(Color(0xFFFEE2E2), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Default.CloudOff,
-                contentDescription = "Error",
-                tint = Color(0xFFDC2626),
-                modifier = Modifier.size(48.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            "Something went wrong",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.Bold
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = HomeDarkTheme.cardBackground
             ),
-            color = Color(0xFF111827),
-            textAlign = TextAlign.Center
-        )
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            border = BorderStroke(1.dp, HomeDarkTheme.error.copy(alpha = 0.3f))
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .background(HomeDarkTheme.error.copy(alpha = 0.15f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.CloudOff,
+                        contentDescription = "Error",
+                        tint = HomeDarkTheme.error,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
 
-        Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Something went wrong",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = HomeDarkTheme.textPrimary,
+                    textAlign = TextAlign.Center
+                )
 
-        Text(
-            message,
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color(0xFF6B7280),
-            textAlign = TextAlign.Center,
-            lineHeight = 24.sp
-        )
+                Text(
+                    message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = HomeDarkTheme.textSecondary,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 24.sp
+                )
+            }
+        }
     }
 }
 
+// Convert DarkRouteStatusScreen to DarkRouteStatusContent
 @Composable
-fun CleanRouteStatusScreen(
+fun DarkRouteStatusContent(
     user: UserModel,
     routeProgressState: CommonRoutesProgressState<List<RouteProgressModel>>,
     workerFeedBackViewModel: WorkerFeedBackViewModel
 ) {
     when {
-        routeProgressState.isLoading -> CleanLoadingState("Loading route information...")
-        routeProgressState.error.isNotEmpty() -> CleanErrorState("Unable to load route data: ${routeProgressState.error}")
+        routeProgressState.isLoading -> DarkLoadingState("Loading route information...")
+        routeProgressState.error.isNotEmpty() -> DarkErrorState("Unable to load route data: ${routeProgressState.error}")
         routeProgressState.succcess != null -> {
             val route = routeProgressState.succcess.find { it.routeId == user.routeId }
             if (route != null) {
-                CleanRouteProgressContent(
+                DarkRouteProgressContent(
                     user = user,
                     route = route,
                     areaProgressList = route.areaProgress,
                     workerFeedBackViewModel = workerFeedBackViewModel
                 )
             } else {
-                CleanEmptyState(
+                DarkEmptyState(
                     title = "No Active Collection",
                     message = "There's no scheduled waste collection for your area today. Check back tomorrow!",
                     icon = Icons.Outlined.Route
@@ -449,7 +535,7 @@ fun CleanRouteStatusScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CleanRouteProgressContent(
+private fun DarkRouteProgressContent(
     user: UserModel,
     route: RouteProgressModel,
     areaProgressList: List<AreaProgress>,
@@ -465,7 +551,7 @@ private fun CleanRouteProgressContent(
     val coroutineScope = rememberCoroutineScope()
 
     if (showFeedbackSheet) {
-        CleanFeedbackBottomSheet(
+        DarkFeedbackBottomSheet(
             onDismiss = {
                 showFeedbackSheet = false
             },
@@ -489,44 +575,34 @@ private fun CleanRouteProgressContent(
         )
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    // Convert to Column with spacing instead of LazyColumn
+    Column(
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        item {
-            CleanRouteInfoHeader(user = user, route = route, areaProgressList = areaProgressList)
-        }
+        DarkRouteInfoHeader(user = user, route = route, areaProgressList = areaProgressList)
 
-        item {
-            CleanProgressSummaryCard(
-                areaProgressList = areaProgressList,
-                userAreaId = user.areaId,
-                showFeedbackButton = userArea?.isCompleted == true && !feedbackGivenForThisSession,
-                onGiveFeedbackClick = { showFeedbackSheet = true }
-            )
-        }
+        DarkProgressSummaryCard(
+            areaProgressList = areaProgressList,
+            userAreaId = user.areaId,
+            showFeedbackButton = userArea?.isCompleted == true && !feedbackGivenForThisSession,
+            onGiveFeedbackClick = { showFeedbackSheet = true }
+        )
 
-        item {
-            CleanSectionHeader(
-                title = "Collection Route",
-                subtitle = "Track progress through your neighborhood"
-            )
-        }
+        DarkSectionHeader(
+            title = "Collection Route",
+            subtitle = "Track progress through your neighborhood"
+        )
 
-        item {
-            CleanRouteVisualization(
-                areas = areaProgressList,
-                currentIndex = currentAreaIndex,
-                userAreaId = user.areaId
-            )
-        }
+        DarkRouteVisualization(
+            areas = areaProgressList,
+            currentIndex = currentAreaIndex,
+            userAreaId = user.areaId
+        )
     }
 }
 
 @Composable
-private fun CleanRouteInfoHeader(
+private fun DarkRouteInfoHeader(
     user: UserModel,
     route: RouteProgressModel,
     areaProgressList: List<AreaProgress>
@@ -541,125 +617,150 @@ private fun CleanRouteInfoHeader(
     )
     val userName = FirebaseAuth.getInstance().currentUser?.displayName?.split(" ")?.firstOrNull() ?: "User"
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(24.dp))
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = HomeDarkTheme.cardBackground
+        ),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        border = BorderStroke(1.dp, HomeDarkTheme.borderColor)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(Color(0xFF3B82F6).copy(alpha = 0.1f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.WavingHand,
-                    contentDescription = null,
-                    tint = Color(0xFF3B82F6),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Column {
-                Text(
-                    "Hello, $userName!",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Color(0xFF111827)
-                )
-                Text(
-                    "Your collection status today",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF6B7280)
-                )
-            }
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(
-                    progress = { animatedProgress },
-                    modifier = Modifier.size(80.dp),
-                    color = Color(0xFF10B981),
-                    trackColor = Color(0xFFE5E7EB),
-                    strokeWidth = 6.dp,
-                    strokeCap = StrokeCap.Round
-                )
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "${(animatedProgress * 100).toInt()}%",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            HomeDarkTheme.primary.copy(alpha = 0.1f),
+                            Color.Transparent
                         ),
-                        color = Color(0xFF10B981)
+                        radius = 400f
                     )
-                    Text(
-                        text = "Done",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF6B7280)
+                )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                HomeDarkTheme.primary.copy(alpha = 0.15f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.WavingHand,
+                            contentDescription = null,
+                            tint = HomeDarkTheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Column {
+                        Text(
+                            "Hello, $userName!",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = HomeDarkTheme.textPrimary
+                        )
+                        Text(
+                            "Your collection status today",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = HomeDarkTheme.textSecondary
+                        )
+                    }
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            progress = { animatedProgress },
+                            modifier = Modifier.size(80.dp),
+                            color = HomeDarkTheme.success,
+                            trackColor = HomeDarkTheme.borderColor,
+                            strokeWidth = 6.dp,
+                            strokeCap = StrokeCap.Round
+                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "${(animatedProgress * 100).toInt()}%",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = HomeDarkTheme.success
+                            )
+                            Text(
+                                text = "Done",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = HomeDarkTheme.textSecondary
+                            )
+                        }
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Route Progress",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = HomeDarkTheme.textPrimary
+                        )
+                        Text(
+                            "$completedAreas of $totalAreas areas completed",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = HomeDarkTheme.secondary
+                        )
+                        Text(
+                            "${totalAreas - completedAreas} areas remaining",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = HomeDarkTheme.textSecondary
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = HomeDarkTheme.borderColor)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    DarkInfoItem(
+                        icon = Icons.Default.LocationOn,
+                        title = "Your Area",
+                        value = user.areaName.ifEmpty { "Not Set" },
+                        modifier = Modifier.weight(1f)
+                    )
+                    DarkInfoItem(
+                        icon = Icons.Default.CalendarToday,
+                        title = "Collection Date",
+                        value = route.date.ifEmpty { "Today" },
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    "Route Progress",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Color(0xFF111827)
-                )
-                Text(
-                    "$completedAreas of $totalAreas areas completed",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Medium
-                    ),
-                    color = Color(0xFF3B82F6)
-                )
-                Text(
-                    "${totalAreas - completedAreas} areas remaining",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF6B7280)
-                )
-            }
-        }
-
-        HorizontalDivider(color = Color(0xFFF3F4F6))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            CleanInfoItem(
-                icon = Icons.Default.LocationOn,
-                title = "Your Area",
-                value = user.areaName.ifEmpty { "Not Set" },
-                modifier = Modifier.weight(1f)
-            )
-            CleanInfoItem(
-                icon = Icons.Default.CalendarToday,
-                title = "Collection Date",
-                value = route.date.ifEmpty { "Today" },
-                modifier = Modifier.weight(1f)
-            )
         }
     }
 }
 
 @Composable
-private fun CleanInfoItem(
+private fun DarkInfoItem(
     icon: ImageVector,
     title: String,
     value: String,
@@ -674,26 +775,26 @@ private fun CleanInfoItem(
             imageVector = icon,
             contentDescription = title,
             modifier = Modifier.size(20.dp),
-            tint = Color(0xFF6B7280)
+            tint = HomeDarkTheme.textSecondary
         )
         Text(
             text = title,
             style = MaterialTheme.typography.labelSmall,
-            color = Color(0xFF6B7280)
+            color = HomeDarkTheme.textSecondary
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Medium
             ),
-            color = Color(0xFF111827),
+            color = HomeDarkTheme.textPrimary,
             textAlign = TextAlign.Center
         )
     }
 }
 
 @Composable
-private fun CleanProgressSummaryCard(
+private fun DarkProgressSummaryCard(
     areaProgressList: List<AreaProgress>,
     userAreaId: String,
     showFeedbackButton: Boolean,
@@ -707,88 +808,96 @@ private fun CleanProgressSummaryCard(
     }
 
     val (statusColor, statusBgColor, statusIcon) = when (userAreaStatus) {
-        "Completed" -> Triple(Color(0xFF10B981), Color(0xFFECFDF5), Icons.Default.CheckCircle)
-        "In Progress" -> Triple(Color(0xFFF59E0B), Color(0xFFFEF3C7), Icons.Default.AccessTime)
-        else -> Triple(Color(0xFF6B7280), Color(0xFFF3F4F6), Icons.Default.Schedule)
+        "Completed" -> Triple(HomeDarkTheme.success, HomeDarkTheme.success.copy(alpha = 0.15f), Icons.Default.CheckCircle)
+        "In Progress" -> Triple(HomeDarkTheme.warning, HomeDarkTheme.warning.copy(alpha = 0.15f), Icons.Default.AccessTime)
+        else -> Triple(HomeDarkTheme.textSecondary, HomeDarkTheme.surfaceVariant, Icons.Default.Schedule)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(20.dp))
-            .padding(20.dp)
-            .animateContentSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = HomeDarkTheme.cardBackground
+        ),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = BorderStroke(1.dp, HomeDarkTheme.borderColor),
+        modifier = Modifier.animateContentSize()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(statusBgColor, CircleShape),
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Icon(
-                    statusIcon,
-                    contentDescription = null,
-                    tint = statusColor,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    "Your Area Status",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color(0xFF6B7280)
-                )
-                Text(
-                    userAreaStatus,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = statusColor
-                )
-                if (userArea?.completedAt != null && userAreaStatus == "Completed") {
-                    Text(
-                        "Completed at ${formatTimestamp(userArea.completedAt, "h:mm a")}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF6B7280)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(statusBgColor, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        statusIcon,
+                        contentDescription = null,
+                        tint = statusColor,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
-            }
-        }
 
-        AnimatedVisibility(visible = showFeedbackButton) {
-            OutlinedButton(
-                onClick = onGiveFeedbackClick,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color(0xFF3B82F6)
-                ),
-                border = BorderStroke(1.dp, Color(0xFF3B82F6))
-            ) {
-                Icon(
-                    Icons.Outlined.RateReview,
-                    contentDescription = null,
-                    modifier = Modifier.size(ButtonDefaults.IconSize)
-                )
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(
-                    "GIVE FEEDBACK",
-                    fontWeight = FontWeight.Bold
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Your Area Status",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = HomeDarkTheme.textSecondary
+                    )
+                    Text(
+                        userAreaStatus,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = statusColor
+                    )
+                    if (userArea?.completedAt != null && userAreaStatus == "Completed") {
+                        Text(
+                            "Completed at ${formatTimestamp(userArea.completedAt, "h:mm a")}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = HomeDarkTheme.textSecondary
+                        )
+                    }
+                }
+            }
+
+            AnimatedVisibility(visible = showFeedbackButton) {
+                Button(
+                    onClick = onGiveFeedbackClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = HomeDarkTheme.primary
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.RateReview,
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(
+                        "GIVE FEEDBACK",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
 }
 
-
 @Composable
-private fun CleanSectionHeader(
+private fun DarkSectionHeader(
     title: String,
     subtitle: String? = null
 ) {
@@ -800,146 +909,158 @@ private fun CleanSectionHeader(
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold
             ),
-            color = Color(0xFF111827)
+            color = HomeDarkTheme.textPrimary
         )
         if (subtitle != null) {
             Text(
                 subtitle,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF6B7280)
+                color = HomeDarkTheme.textSecondary
             )
         }
     }
 }
 
 @Composable
-private fun CleanRouteVisualization(
+private fun DarkRouteVisualization(
     areas: List<AreaProgress>,
     currentIndex: Int,
     userAreaId: String
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(20.dp))
-            .padding(20.dp)
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = HomeDarkTheme.cardBackground
+        ),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = BorderStroke(1.dp, HomeDarkTheme.borderColor)
     ) {
-        CleanRouteMapIndicator(
-            areas = areas,
-            currentIndex = currentIndex,
+        Row(
             modifier = Modifier
-                .width(40.dp)
-                .height((areas.size * 80).dp.coerceAtMost(400.dp))
-                .padding(end = 20.dp)
-        )
-
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .height((areas.size * 80).dp.coerceAtMost(400.dp)),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxWidth()
+                .padding(20.dp)
         ) {
-            itemsIndexed(areas) { index, area ->
-                val isCurrent = index == currentIndex
-                val isUserArea = area.areaId == userAreaId
-                CleanAreaProgressItem(
-                    area = area,
-                    isCurrent = isCurrent,
-                    isUserArea = isUserArea
-                )
+            DarkRouteMapIndicator(
+                areas = areas,
+                currentIndex = currentIndex,
+                modifier = Modifier
+                    .width(40.dp)
+                    .height((areas.size * 80).dp.coerceAtMost(400.dp))
+                    .padding(end = 20.dp)
+            )
+
+            // Replace LazyColumn with Column for the area items
+            Column(
+                modifier = Modifier
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                areas.forEachIndexed { index, area ->
+                    val isCurrent = index == currentIndex
+                    val isUserArea = area.areaId == userAreaId
+                    DarkAreaProgressItem(
+                        area = area,
+                        isCurrent = isCurrent,
+                        isUserArea = isUserArea
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun CleanAreaProgressItem(
+private fun DarkAreaProgressItem(
     area: AreaProgress,
     isCurrent: Boolean,
     isUserArea: Boolean
 ) {
     val (statusColor, statusBgColor, statusIcon) = when {
-        area.isCompleted -> Triple(Color(0xFF10B981), Color(0xFFECFDF5), Icons.Default.CheckCircle)
-        isCurrent -> Triple(Color(0xFFF59E0B), Color(0xFFFEF3C7), Icons.Default.AccessTime)
-        else -> Triple(Color(0xFF6B7280), Color(0xFFF3F4F6), Icons.Default.Schedule)
+        area.isCompleted -> Triple(HomeDarkTheme.success, HomeDarkTheme.success.copy(alpha = 0.15f), Icons.Default.CheckCircle)
+        isCurrent -> Triple(HomeDarkTheme.warning, HomeDarkTheme.warning.copy(alpha = 0.15f), Icons.Default.AccessTime)
+        else -> Triple(HomeDarkTheme.textSecondary, HomeDarkTheme.surfaceVariant, Icons.Default.Schedule)
     }
 
-    val borderColor = if (isUserArea) Color(0xFF3B82F6) else Color.Transparent
+    val borderColor = if (isUserArea) HomeDarkTheme.secondary else Color.Transparent
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                if (isUserArea) Color(0xFF3B82F6).copy(alpha = 0.05f) else Color(0xFFF9FAFB),
-                RoundedCornerShape(16.dp)
-            )
-            .border(
-                width = if (isUserArea) 2.dp else 0.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = if (isUserArea) HomeDarkTheme.secondary.copy(alpha = 0.05f) else HomeDarkTheme.surfaceVariant
+        ),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(
+            width = if (isUserArea) 2.dp else 0.dp,
+            color = borderColor
+        )
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(40.dp)
-                .background(statusBgColor, CircleShape),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(
-                imageVector = statusIcon,
-                contentDescription = "Status Icon",
-                tint = statusColor,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                area.areaName,
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = if (isUserArea) FontWeight.Bold else FontWeight.Medium
-                ),
-                color = if (isUserArea) Color(0xFF1E40AF) else Color(0xFF111827)
-            )
-
-            val statusText = when {
-                area.isCompleted -> "Completed at ${formatTimestamp(area.completedAt, "h:mm a")}"
-                isCurrent -> "Collection in progress..."
-                else -> "Pending collection"
-            }
-
-            Text(
-                statusText,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B7280)
-            )
-        }
-
-        if (isUserArea) {
             Box(
                 modifier = Modifier
-                    .background(Color(0xFF3B82F6), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .size(40.dp)
+                    .background(statusBgColor, CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "YOU",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
-                    ),
-                    color = Color.White,
-                    fontSize = 10.sp
+                Icon(
+                    imageVector = statusIcon,
+                    contentDescription = "Status Icon",
+                    tint = statusColor,
+                    modifier = Modifier.size(20.dp)
                 )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    area.areaName,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = if (isUserArea) FontWeight.Bold else FontWeight.Medium
+                    ),
+                    color = if (isUserArea) HomeDarkTheme.secondary else HomeDarkTheme.textPrimary
+                )
+
+                val statusText = when {
+                    area.isCompleted -> "Completed at ${formatTimestamp(area.completedAt, "h:mm a")}"
+                    isCurrent -> "Collection in progress..."
+                    else -> "Pending collection"
+                }
+
+                Text(
+                    statusText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = HomeDarkTheme.textSecondary
+                )
+            }
+
+            if (isUserArea) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = HomeDarkTheme.secondary
+                    ),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        "YOU",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun CleanRouteMapIndicator(
+private fun DarkRouteMapIndicator(
     areas: List<AreaProgress>,
     currentIndex: Int,
     modifier: Modifier = Modifier
@@ -948,9 +1069,9 @@ private fun CleanRouteMapIndicator(
     val circleRadiusPx = with(density) { 8.dp.toPx() }
     val lineStrokeWidthPx = with(density) { 3.dp.toPx() }
 
-    val completedColor = Color(0xFF10B981)
-    val pendingColor = Color(0xFFE5E7EB)
-    val activeColor = Color(0xFFF59E0B)
+    val completedColor = HomeDarkTheme.success
+    val pendingColor = HomeDarkTheme.borderColor
+    val activeColor = HomeDarkTheme.warning
 
     Canvas(modifier = modifier) {
         val centerX = size.width / 2
@@ -972,7 +1093,6 @@ private fun CleanRouteMapIndicator(
                     end = Offset(centerX, endY - circleRadiusPx),
                     strokeWidth = lineStrokeWidthPx,
                     cap = StrokeCap.Round
-
                 )
             }
         }
@@ -1006,110 +1126,130 @@ private fun CleanRouteMapIndicator(
 }
 
 @Composable
-fun CleanEmptyState(title: String, message: String, icon: ImageVector) {
+fun DarkEmptyState(title: String, message: String, icon: ImageVector) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(40.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .background(Color(0xFFF3F4F6), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(60.dp),
-                tint = Color(0xFF9CA3AF)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            title,
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.Bold
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = HomeDarkTheme.cardBackground
             ),
-            textAlign = TextAlign.Center,
-            color = Color(0xFF111827)
-        )
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            border = BorderStroke(1.dp, HomeDarkTheme.borderColor)
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .background(HomeDarkTheme.surfaceVariant, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = HomeDarkTheme.textSecondary
+                    )
+                }
 
-        Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    title,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    textAlign = TextAlign.Center,
+                    color = HomeDarkTheme.textPrimary
+                )
 
-        Text(
-            message,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            color = Color(0xFF6B7280),
-            lineHeight = 24.sp
-        )
+                Text(
+                    message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = HomeDarkTheme.textSecondary,
+                    lineHeight = 24.sp
+                )
+            }
+        }
     }
 }
 
+// Convert DarkAreaSelectionScreen to DarkAreaSelectionContent
 @Composable
-fun CleanAreaSelectionScreen(
+fun DarkAreaSelectionContent(
     routeProgressState: CommonRoutesProgressState<List<RouteProgressModel>>,
     onAreaSelected: (String, String, String, String) -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         when {
-            routeProgressState.isLoading -> CleanLoadingState("Loading available areas...")
-            routeProgressState.error.isNotEmpty() -> CleanErrorState(routeProgressState.error)
+            routeProgressState.isLoading -> DarkLoadingState("Loading available areas...")
+            routeProgressState.error.isNotEmpty() -> DarkErrorState(routeProgressState.error)
             routeProgressState.succcess != null -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White, RoundedCornerShape(24.dp))
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = HomeDarkTheme.cardBackground
+                    ),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    border = BorderStroke(1.dp, HomeDarkTheme.borderColor)
                 ) {
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .size(60.dp)
-                            .background(Color(0xFF3B82F6).copy(alpha = 0.1f), CircleShape),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Icon(
-                            Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Color(0xFF3B82F6),
-                            modifier = Modifier.size(30.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .background(
+                                    HomeDarkTheme.primary.copy(alpha = 0.15f),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = HomeDarkTheme.primary,
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+
+                        Text(
+                            "Select Your Area",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = HomeDarkTheme.textPrimary
+                        )
+                        Text(
+                            "Choose your residential area to track waste collection status",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = HomeDarkTheme.textSecondary,
+                            textAlign = TextAlign.Center
                         )
                     }
-
-                    Text(
-                        "Select Your Area",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = Color(0xFF111827)
-                    )
-                    Text(
-                        "Choose your residential area to track waste collection status",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF6B7280),
-                        textAlign = TextAlign.Center
-                    )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                // Convert LazyColumn to Column for route items
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(routeProgressState.succcess) { route ->
-                        CleanRouteItem(route = route, onAreaSelected = onAreaSelected)
+                    routeProgressState.succcess.forEach { route ->
+                        DarkRouteItem(route = route, onAreaSelected = onAreaSelected)
                     }
                 }
             }
@@ -1118,84 +1258,98 @@ fun CleanAreaSelectionScreen(
 }
 
 @Composable
-fun CleanRouteItem(
+fun DarkRouteItem(
     route: RouteProgressModel,
     onAreaSelected: (String, String, String, String) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(20.dp))
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = HomeDarkTheme.cardBackground
+        ),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = BorderStroke(1.dp, HomeDarkTheme.borderColor)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Icon(
-                Icons.Default.Route,
-                contentDescription = null,
-                tint = Color(0xFF3B82F6),
-                modifier = Modifier.size(24.dp)
-            )
-            Text(
-                "Route ${route.routeId}",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = Color(0xFF111827)
-            )
-        }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    Icons.Default.Route,
+                    contentDescription = null,
+                    tint = HomeDarkTheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    "Route ${route.routeId}",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = HomeDarkTheme.textPrimary
+                )
+            }
 
-        HorizontalDivider(color = Color(0xFFF3F4F6))
+            HorizontalDivider(color = HomeDarkTheme.borderColor)
 
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            route.areaProgress.forEach { area ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFF9FAFB), RoundedCornerShape(12.dp))
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Color(0xFF6B7280),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text(
-                            text = area.areaName,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium
-                            ),
-                            color = Color(0xFF111827)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            onAreaSelected(route.routeId, route.routeId, area.areaId, area.areaName)
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3B82F6)
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                route.areaProgress.forEach { area ->
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = HomeDarkTheme.surfaceVariant
                         ),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(
-                            "Select",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = Color.White
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    tint = HomeDarkTheme.textSecondary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = area.areaName,
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    color = HomeDarkTheme.textPrimary
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    onAreaSelected(route.routeId, route.routeId, area.areaId, area.areaName)
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = HomeDarkTheme.primary
+                                ),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    "Select",
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = Color.White
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -1204,7 +1358,7 @@ fun CleanRouteItem(
 }
 
 @Composable
-fun CleanEmailVerificationDialog(
+fun DarkEmailVerificationDialog(
     onDismiss: () -> Unit,
     onRefresh: () -> Unit,
     onResend: () -> Unit
@@ -1216,7 +1370,7 @@ fun CleanEmailVerificationDialog(
                 onClick = onRefresh,
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3B82F6)
+                    containerColor = HomeDarkTheme.primary
                 )
             ) {
                 Text(
@@ -1236,7 +1390,7 @@ fun CleanEmailVerificationDialog(
                 Text(
                     "Resend Email",
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF3B82F6)
+                    color = HomeDarkTheme.primary
                 )
             }
         },
@@ -1248,13 +1402,14 @@ fun CleanEmailVerificationDialog(
                 Icon(
                     Icons.Default.MarkEmailRead,
                     contentDescription = null,
-                    tint = Color(0xFF3B82F6)
+                    tint = HomeDarkTheme.primary
                 )
                 Text(
                     "Email Verification Required",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold
-                    )
+                    ),
+                    color = HomeDarkTheme.textPrimary
                 )
             }
         },
@@ -1262,11 +1417,11 @@ fun CleanEmailVerificationDialog(
             Text(
                 "Please verify your email address to continue. Check your inbox for the verification email.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF6B7280)
+                color = HomeDarkTheme.textSecondary
             )
         },
         shape = RoundedCornerShape(16.dp),
-        containerColor = Color.White
+        containerColor = HomeDarkTheme.cardBackground
     )
 }
 
@@ -1281,7 +1436,7 @@ fun formatTimestamp(date: Long?, pattern: String = "yyyy-MM-dd HH:mm"): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CleanFeedbackBottomSheet(
+fun DarkFeedbackBottomSheet(
     onDismiss: () -> Unit,
     onSubmit: (Int, String) -> Unit
 ) {
@@ -1292,14 +1447,14 @@ fun CleanFeedbackBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color.White,
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        containerColor = HomeDarkTheme.cardBackground,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         dragHandle = {
             Box(
                 modifier = Modifier
                     .padding(top = 12.dp)
-                    .size(width = 32.dp, height = 4.dp)
-                    .background(Color(0xFFE5E7EB), RoundedCornerShape(2.dp))
+                    .size(width = 40.dp, height = 4.dp)
+                    .background(HomeDarkTheme.borderColor, RoundedCornerShape(2.dp))
             )
         }
     ) {
@@ -1309,22 +1464,25 @@ fun CleanFeedbackBottomSheet(
                 .padding(24.dp)
                 .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .size(60.dp)
-                        .background(Color(0xFF10B981).copy(alpha = 0.1f), CircleShape),
+                        .background(
+                            HomeDarkTheme.success.copy(alpha = 0.15f),
+                            CircleShape
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.CheckCircle,
                         contentDescription = null,
-                        tint = Color(0xFF10B981),
+                        tint = HomeDarkTheme.success,
                         modifier = Modifier.size(30.dp)
                     )
                 }
@@ -1333,17 +1491,17 @@ fun CleanFeedbackBottomSheet(
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = Color(0xFF111827)
+                    color = HomeDarkTheme.textPrimary
                 )
                 Text(
                     "How was the waste collection service today?",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
-                    color = Color(0xFF6B7280)
+                    color = HomeDarkTheme.textSecondary
                 )
             }
 
-            CleanStarRating(
+            DarkStarRating(
                 rating = selectedRating,
                 onRatingChanged = { selectedRating = it }
             )
@@ -1351,13 +1509,18 @@ fun CleanFeedbackBottomSheet(
             OutlinedTextField(
                 value = improvementText,
                 onValueChange = { improvementText = it },
-                label = { Text("Additional feedback (optional)") },
+                label = { Text("Additional feedback (optional)", color = HomeDarkTheme.textSecondary) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 maxLines = 3,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF3B82F6),
-                    focusedLabelColor = Color(0xFF3B82F6)
+                    focusedBorderColor = HomeDarkTheme.primary,
+                    unfocusedBorderColor = HomeDarkTheme.borderColor,
+                    focusedTextColor = HomeDarkTheme.textPrimary,
+                    unfocusedTextColor = HomeDarkTheme.textPrimary,
+                    cursorColor = HomeDarkTheme.primary,
+                    focusedLabelColor = HomeDarkTheme.primary,
+                    unfocusedLabelColor = HomeDarkTheme.textSecondary
                 )
             )
 
@@ -1369,8 +1532,8 @@ fun CleanFeedbackBottomSheet(
                     .height(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3B82F6),
-                    disabledContainerColor = Color(0xFFE5E7EB)
+                    containerColor = HomeDarkTheme.primary,
+                    disabledContainerColor = HomeDarkTheme.borderColor
                 )
             ) {
                 Text(
@@ -1386,7 +1549,7 @@ fun CleanFeedbackBottomSheet(
 }
 
 @Composable
-fun CleanStarRating(
+fun DarkStarRating(
     maxStars: Int = 5,
     rating: Int,
     onRatingChanged: (Int) -> Unit,
@@ -1412,7 +1575,7 @@ fun CleanStarRating(
                 Icon(
                     imageVector = if (isSelected) Icons.Filled.Star else Icons.Outlined.Star,
                     contentDescription = "Star $star",
-                    tint = if (isSelected) Color(0xFFFBBF24) else Color(0xFF9CA3AF),
+                    tint = if (isSelected) HomeDarkTheme.accent else HomeDarkTheme.textSecondary,
                     modifier = Modifier
                         .size(32.dp)
                         .scale(iconScale)

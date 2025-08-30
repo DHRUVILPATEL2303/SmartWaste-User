@@ -50,6 +50,9 @@ sealed class Routes{
     @Serializable
     object ChatBotScreen
 
+    @Serializable
+    object  EditorialScreen
+
 }
 
 

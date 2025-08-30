@@ -2,6 +2,7 @@ package com.example.smartwaste_user.presentation.screens.reportscreens
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,11 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.UiComposable
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +42,26 @@ import com.example.smartwaste_user.presentation.viewmodels.ReportViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+// Dark theme colors
+object ReportDarkTheme {
+    val background = Color(0xFF0D1117)
+    val surface = Color(0xFF161B22)
+    val surfaceVariant = Color(0xFF21262D)
+    val primary = Color(0xFF2ECC71)
+    val primaryVariant = Color(0xFF27AE60)
+    val secondary = Color(0xFF58A6FF)
+    val accent = Color(0xFFE3B341)
+    val error = Color(0xFFFF6B6B)
+    val success = Color(0xFF56D364)
+    val warning = Color(0xFFFFA726)
+    val textPrimary = Color(0xFFE6EDF3)
+    val textSecondary = Color(0xFF8B949E)
+    val cardBackground = Color(0xFF1C2128)
+    val cardHover = Color(0xFF262C36)
+    val borderColor = Color(0xFF30363D)
+    val gradientStart = Color(0xFF1E40AF)
+    val gradientEnd = Color(0xFF3B82F6)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,78 +75,142 @@ fun ReportScreenUI(
         viewModel.getAllReports()
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        TopAppBar(
-            title = {
-                Text(
-                    text = "Reports & Services",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        ReportDarkTheme.background,
+                        ReportDarkTheme.surface
+                    )
                 )
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            ),
-            actions = {
-                IconButton(onClick = { viewModel.getAllReports() }) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Refresh",
-                        tint = MaterialTheme.colorScheme.onPrimary
+            )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Dark TopAppBar
+            TopAppBar(
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    ReportDarkTheme.primary.copy(alpha = 0.15f),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Assignment,
+                                contentDescription = "Reports",
+                                tint = ReportDarkTheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = "Reports & Services",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ReportDarkTheme.textPrimary
+                            )
+                            Text(
+                                text = "Manage your reports",
+                                fontSize = 12.sp,
+                                color = ReportDarkTheme.textSecondary
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = ReportDarkTheme.cardBackground.copy(alpha = 0.95f)
+                ),
+                actions = {
+                    IconButton(
+                        onClick = { viewModel.getAllReports() },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                ReportDarkTheme.secondary.copy(alpha = 0.15f),
+                                CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = ReportDarkTheme.secondary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                }
+            )
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                item {
+                    QuickActionButtons(
+                        onMakeReportClick = {
+                            navController.navigate(Routes.MakeReportScreen)
+                        },
+                        onMakeComplaintClick = { /* Navigate to make complaint screen */ },
+                        onExtraServiceClick = {
+                            navController.navigate(Routes.RequestExtraServiceScreen)
+                        }
                     )
                 }
-            },
-            modifier = Modifier.clip(RoundedCornerShape(20.dp))
-        )
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 16.dp)
-        ) {
-            item {
-                QuickActionButtons(
-                    onMakeReportClick = {
-                        navController.navigate(Routes.MakeReportScreen)
-                    },
-                    onMakeComplaintClick = { /* Navigate to make complaint screen */ },
-                    onExtraServiceClick = {
-                        navController.navigate(Routes.RequestExtraServiceScreen)
-
-                    }
-                )
-            }
-
-            item {
-                Text(
-                    text = "Recent Reports",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
-                )
-            }
-
-            when {
-                reportState.isLoading -> {
-                    item { LoadingContent() }
-                }
-                reportState.error.isNotEmpty() -> {
-                    item { ErrorContent(error = reportState.error, onRetry = { viewModel.getAllReports() }) }
-                }
-                reportState.success?.isEmpty() == true -> {
-                    item { EmptyContent() }
-                }
-                else -> {
-                    items(reportState.success ?: emptyList(), key = { it.reportId }) { report ->
-                        ReportItem(
-                            report = report,
-                            onClick = { /* Handle click if needed */ },
-                            onDeleteClick = { viewModel.deleteReport(report.reportId) },
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.History,
+                            contentDescription = null,
+                            tint = ReportDarkTheme.primary,
+                            modifier = Modifier.size(20.dp)
                         )
+                        Text(
+                            text = "Recent Reports",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = ReportDarkTheme.textPrimary
+                        )
+                    }
+                }
+
+                when {
+                    reportState.isLoading -> {
+                        item { LoadingContent() }
+                    }
+                    reportState.error.isNotEmpty() -> {
+                        item { ErrorContent(error = reportState.error, onRetry = { viewModel.getAllReports() }) }
+                    }
+                    reportState.success?.isEmpty() == true -> {
+                        item { EmptyContent() }
+                    }
+                    else -> {
+                        items(reportState.success ?: emptyList(), key = { it.reportId }) { report ->
+                            ReportItem(
+                                report = report,
+                                onClick = { /* Handle click if needed */ },
+                                onDeleteClick = { viewModel.deleteReport(report.reportId) },
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -141,18 +228,50 @@ private fun QuickActionButtons(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = ReportDarkTheme.cardBackground
+        ),
+        border = BorderStroke(1.dp, ReportDarkTheme.borderColor)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceAround
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            QuickActionButton(icon = Icons.Default.Add, label = "Make Report", color = MaterialTheme.colorScheme.primary, onClick = onMakeReportClick)
-            QuickActionButton(icon = Icons.Default.Warning, label = "Complaint", color = Color(0xFFFF6B35), onClick = onMakeComplaintClick)
-            QuickActionButton(icon = Icons.Default.Build, label = "Extra Service", color = Color(0xFF4CAF50), onClick = onExtraServiceClick)
+            Text(
+                text = "Quick Actions",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = ReportDarkTheme.textPrimary
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                QuickActionButton(
+                    icon = Icons.Default.Add,
+                    label = "Make Report",
+                    color = ReportDarkTheme.primary,
+                    onClick = onMakeReportClick
+                )
+                QuickActionButton(
+                    icon = Icons.Default.Warning,
+                    label = "Complaint",
+                    color = ReportDarkTheme.warning,
+                    onClick = onMakeComplaintClick
+                )
+                QuickActionButton(
+                    icon = Icons.Default.Build,
+                    label = "Extra Service",
+                    color = ReportDarkTheme.success,
+                    onClick = onExtraServiceClick
+                )
+            }
         }
     }
 }
@@ -165,15 +284,34 @@ private fun QuickActionButton(icon: ImageVector, label: String, color: Color, on
     ) {
         Box(
             modifier = Modifier
-                .size(56.dp)
-                .clip(CircleShape)
-                .background(color.copy(alpha = 0.1f)),
+                .size(64.dp)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            color.copy(alpha = 0.2f),
+                            color.copy(alpha = 0.05f)
+                        )
+                    ),
+                    shape = CircleShape
+                )
+                .border(1.dp, color.copy(alpha = 0.3f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Icon(imageVector = icon, contentDescription = label, tint = color, modifier = Modifier.size(24.dp))
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = color,
+                modifier = Modifier.size(28.dp)
+            )
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = ReportDarkTheme.textPrimary,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -185,105 +323,166 @@ private fun ReportItem(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF7FBC81))
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = ReportDarkTheme.cardBackground
+        ),
+        border = BorderStroke(1.dp, ReportDarkTheme.borderColor)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            ReportDarkTheme.primary.copy(alpha = 0.05f),
+                            Color.Transparent
+                        ),
+                        radius = 300f
+                    )
+                )
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = "Report in ${report.areaName}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                IconButton(onClick = onDeleteClick, modifier = Modifier.size(24.dp)) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete Report",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
-                    )
+                // Header with title and delete button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = ReportDarkTheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "Report in ${report.areaName}",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ReportDarkTheme.textPrimary,
+                            modifier = Modifier.weight(1f),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onDeleteClick,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(
+                                ReportDarkTheme.error.copy(alpha = 0.1f),
+                                CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Report",
+                            tint = ReportDarkTheme.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
-            }
 
-            if (report.description.isNotBlank()) {
-                Text(
-                    text = report.description,
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {StatusChip(status = report.status)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = "Date",
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
+                // Description
+                if (report.description.isNotBlank()) {
                     Text(
-                        text = formatReportDate(report.reportDate),
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        text = report.description,
+                        fontSize = 14.sp,
+                        color = ReportDarkTheme.textSecondary,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 20.sp
                     )
                 }
-            }
 
-            Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                // Status and Date row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    StatusChip(status = report.status)
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                InfoRow(icon = Icons.Default.Route, label = "Route ID", value = report.routeId)
-
-                val against = buildList {
-                    if (report.againstDriverId?.isNotBlank() == true) add("Driver")
-                    if (report.againstCollectorId?.isNotBlank() == true) add("Collector")
-                }.joinToString(", ")
-
-                if (against.isNotEmpty()) {
-                    InfoRow(icon = Icons.Default.Group, label = "Against", value = against)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarToday,
+                            contentDescription = "Date",
+                            modifier = Modifier.size(14.dp),
+                            tint = ReportDarkTheme.textSecondary
+                        )
+                        Text(
+                            text = formatReportDate(report.reportDate),
+                            fontSize = 12.sp,
+                            color = ReportDarkTheme.textSecondary
+                        )
+                    }
                 }
-            }
 
-            if (report.attachments.isNotEmpty()) {
-                Column {
-                    Text(
-                        text = "Attachments",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(report.attachments) { attachmentUriString ->
-                            AttachmentThumbnail(attachmentUriString = attachmentUriString)
+                HorizontalDivider(color = ReportDarkTheme.borderColor.copy(alpha = 0.5f))
+
+                // Info section
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    InfoRow(icon = Icons.Default.Route, label = "Route ID", value = report.routeId)
+
+                    val against = buildList {
+                        if (report.againstDriverId?.isNotBlank() == true) add("Driver")
+                        if (report.againstCollectorId?.isNotBlank() == true) add("Collector")
+                    }.joinToString(", ")
+
+                    if (against.isNotEmpty()) {
+                        InfoRow(icon = Icons.Default.Group, label = "Against", value = against)
+                    }
+                }
+
+                // Attachments
+                if (report.attachments.isNotEmpty()) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Attachment,
+                                contentDescription = null,
+                                tint = ReportDarkTheme.textSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Attachments (${report.attachments.size})",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = ReportDarkTheme.textSecondary
+                            )
+                        }
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(report.attachments) { attachmentUriString ->
+                                AttachmentThumbnail(attachmentUriString = attachmentUriString)
+                            }
                         }
                     }
                 }
             }
-
-
         }
     }
 }
@@ -291,93 +490,110 @@ private fun ReportItem(
 
 @Composable
 fun InfoRow(icon: ImageVector, label: String, value: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         Icon(
             imageVector = icon,
             contentDescription = label,
             modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.primary
+            tint = ReportDarkTheme.secondary
         )
-        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = "$label:",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.width(70.dp)
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = ReportDarkTheme.textSecondary,
+            modifier = Modifier.width(80.dp)
         )
         Text(
             text = value,
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = ReportDarkTheme.textPrimary
         )
     }
 }
 
 @Composable
 fun AttachmentThumbnail(attachmentUriString: String) {
-    Box(
-        modifier = Modifier
-            .size(64.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
-                RoundedCornerShape(8.dp)
-            ),
-        contentAlignment = Alignment.Center
+    Card(
+        modifier = Modifier.size(72.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = ReportDarkTheme.surfaceVariant
+        ),
+        border = BorderStroke(1.dp, ReportDarkTheme.borderColor)
     ) {
-        AsyncImage(
-            model = Uri.parse(attachmentUriString),
-            contentDescription = "Attachment Thumbnail",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = Uri.parse(attachmentUriString),
+                contentDescription = "Attachment Thumbnail",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Overlay for better visibility
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.3f)
+                            )
+                        )
+                    )
+            )
+        }
     }
 }
-
-
-//@Composable
-//private fun StatusChip(status: String) {
-//    val (backgroundColor, textColor) = when (status.lowercase()) {
-//        "pending" -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
-//        "approved", "completed" -> Color(0xFFD1E7DD) to Color(0xFF0F5132)
-//        "rejected" -> Color(0xFFF8D7DA) to Color(0xFF721C24)
-//        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-//    }
-//
-//    Box(
-//        modifier = Modifier
-//            .clip(RoundedCornerShape(8.dp))
-//            .background(backgroundColor)
-//            .padding(horizontal = 10.dp, vertical = 4.dp)
-//    ) {
-//        Text(
-//            text = status.uppercase(),
-//            fontSize = 10.sp,
-//            fontWeight = FontWeight.Bold,
-//            color = textColor,
-//            letterSpacing = 0.5.sp
-//        )
-//    }
-//}
 
 @Composable
 private fun LoadingContent() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 32.dp),
+            .padding(vertical = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        Text(
-            text = "Loading reports...",
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-        )
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = ReportDarkTheme.cardBackground
+            ),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            border = BorderStroke(1.dp, ReportDarkTheme.borderColor)
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                CircularProgressIndicator(
+                    color = ReportDarkTheme.primary,
+                    modifier = Modifier.size(48.dp)
+                )
+                Text(
+                    text = "Loading reports...",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = ReportDarkTheme.textPrimary
+                )
+                Text(
+                    text = "Please wait while we fetch your reports",
+                    fontSize = 14.sp,
+                    color = ReportDarkTheme.textSecondary,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }
 
@@ -386,13 +602,74 @@ private fun ErrorContent(error: String, onRetry: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 32.dp),
+            .padding(vertical = 32.dp, horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Icon(imageVector = Icons.Default.Error, contentDescription = "Error", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(48.dp))
-        Text(text = "Error: $error", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        Button(onClick = onRetry) { Text("Retry") }
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = ReportDarkTheme.cardBackground
+            ),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            border = BorderStroke(1.dp, ReportDarkTheme.error.copy(alpha = 0.3f))
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .background(ReportDarkTheme.error.copy(alpha = 0.15f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = "Error",
+                        tint = ReportDarkTheme.error,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                Text(
+                    text = "Something went wrong",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ReportDarkTheme.textPrimary,
+                    textAlign = TextAlign.Center
+                )
+
+                Text(
+                    text = error,
+                    fontSize = 14.sp,
+                    color = ReportDarkTheme.textSecondary,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+
+                Button(
+                    onClick = onRetry,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ReportDarkTheme.primary
+                    )
+                ) {
+                    Icon(
+                        Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "Try Again",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -401,28 +678,54 @@ private fun EmptyContent() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 32.dp),
+            .padding(vertical = 32.dp, horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Icon(
-            imageVector = Icons.Default.AssignmentTurnedIn,
-            contentDescription = "No Reports",
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-            modifier = Modifier.size(64.dp)
-        )
-        Text(
-            text = "No reports found",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
-        Text(
-            text = "Create your first report using the actions above",
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = ReportDarkTheme.cardBackground
+            ),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            border = BorderStroke(1.dp, ReportDarkTheme.borderColor)
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .background(ReportDarkTheme.surfaceVariant, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AssignmentTurnedIn,
+                        contentDescription = "No Reports",
+                        tint = ReportDarkTheme.textSecondary,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+
+                Text(
+                    text = "No reports yet",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ReportDarkTheme.textPrimary,
+                    textAlign = TextAlign.Center
+                )
+
+                Text(
+                    text = "Create your first report using the quick actions above to get started",
+                    fontSize = 14.sp,
+                    color = ReportDarkTheme.textSecondary,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+            }
+        }
     }
 }
 
@@ -435,4 +738,3 @@ private fun formatReportDate(dateString: String): String {
         dateString
     }
 }
-

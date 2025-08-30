@@ -136,7 +136,11 @@ dependencies {
 
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
+    implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.2")
 
+    implementation ("com.google.android.gms:play-services-auth:20.7.0")
+    implementation ("com.google.android.gms:play-services-auth-api-phone:18.2.0")
+    implementation("com.google.firebase:firebase-appcheck-playintegrity:19.0.0")
 
 
 

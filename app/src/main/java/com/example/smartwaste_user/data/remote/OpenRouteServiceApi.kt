@@ -2,7 +2,6 @@ package com.example.smartwaste_user.data.remote
 
 import com.example.smartwaste_user.data.models.DirectionsResponse
 import com.example.smartwaste_user.data.models.ORSRouteResponse
-import com.example.smartwaste_user.presentation.screens.home.CleanRouteItem
 import com.google.android.gms.common.api.Api
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit

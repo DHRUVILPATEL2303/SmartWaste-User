@@ -1,17 +1,23 @@
 package com.example.smartwaste_user.presentation.screens.reportscreens
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +40,27 @@ import com.example.smartwaste_user.presentation.viewmodels.RouteViewModel
 import com.example.smartwaste_user.presentation.viewmodels.extraservicesviewmodel.ExtraServicesViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+
+// Dark theme colors for Extra Service Screen
+object ExtraServiceDarkTheme {
+    val background = Color(0xFF0D1117)
+    val surface = Color(0xFF161B22)
+    val surfaceVariant = Color(0xFF21262D)
+    val primary = Color(0xFF2ECC71)
+    val primaryVariant = Color(0xFF27AE60)
+    val secondary = Color(0xFF58A6FF)
+    val accent = Color(0xFFE3B341)
+    val error = Color(0xFFFF6B6B)
+    val success = Color(0xFF56D364)
+    val warning = Color(0xFFFFA726)
+    val info = Color(0xFF3498DB)
+    val textPrimary = Color(0xFFE6EDF3)
+    val textSecondary = Color(0xFF8B949E)
+    val cardBackground = Color(0xFF1C2128)
+    val cardHover = Color(0xFF262C36)
+    val borderColor = Color(0xFF30363D)
+    val inputBackground = Color(0xFF0D1117)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,191 +99,152 @@ fun ExtraServiceScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Extra Service Requests",
-                        fontWeight = FontWeight.SemiBold
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        ExtraServiceDarkTheme.background,
+                        ExtraServiceDarkTheme.surface
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            item {
-                RequestServiceCard(
-                    routes = routesState.success ?: emptyList(),
-                    isLoading = requestState.isLoading,
-                    onServiceRequest = { serviceModel ->
-                        extraServicesViewModel.requestExtraService(serviceModel)
-                    }
-                )
-            }
-
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Assignment,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Text(
-                        "Your Requests",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(
-                    modifier = Modifier
-                        .width(60.dp)
-                        .height(3.dp)
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                                )
-                            ),
-                            shape = RoundedCornerShape(2.dp)
-                        )
-                )
-            }
-
-            if (getAllState.isLoading) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(48.dp),
-                            contentAlignment = Alignment.Center
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(
+                                        ExtraServiceDarkTheme.info.copy(alpha = 0.15f),
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator(
-                                    color = MaterialTheme.colorScheme.primary
+                                Icon(
+                                    Icons.Default.Build,
+                                    contentDescription = "Extra Service",
+                                    tint = ExtraServiceDarkTheme.info,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Column {
+                                Text(
+                                    "Extra Service Requests",
+                                    fontWeight = FontWeight.Bold,
+                                    color = ExtraServiceDarkTheme.textPrimary,
+                                    fontSize = 18.sp
                                 )
                                 Text(
-                                    "Loading your requests...",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    "Request additional services",
+                                    fontSize = 12.sp,
+                                    color = ExtraServiceDarkTheme.textSecondary
                                 )
                             }
                         }
-                    }
-                }
-            } else if (getAllState.error.isNotEmpty()) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = { navController.popBackStack() },
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                .size(40.dp)
+                                .background(
+                                    ExtraServiceDarkTheme.primary.copy(alpha = 0.15f),
+                                    CircleShape
+                                )
                         ) {
-                            Text(
-                                text = "Failed to load requests",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = getAllState.error,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
-                                textAlign = TextAlign.Center
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = ExtraServiceDarkTheme.primary,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = ExtraServiceDarkTheme.cardBackground.copy(alpha = 0.95f)
+                    ),
+                    actions = {
+                        Spacer(modifier = Modifier.width(16.dp))
                     }
-                }
-            } else if (getAllState.succcess.isNullOrEmpty()) {
+                )
+            }
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 20.dp),
+                contentPadding = PaddingValues(vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
                 item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    RequestServiceCard(
+                        routes = routesState.success ?: emptyList(),
+                        isLoading = requestState.isLoading,
+                        onServiceRequest = { serviceModel ->
+                            extraServicesViewModel.requestExtraService(serviceModel)
+                        }
+                    )
+                }
+
+                item {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Assignment,
                                 contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "No requests yet",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                tint = ExtraServiceDarkTheme.primary,
+                                modifier = Modifier.size(24.dp)
                             )
                             Text(
-                                text = "You haven't made any extra service requests. Use the form above to request additional services.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(top = 4.dp)
+                                "Your Requests",
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = ExtraServiceDarkTheme.textPrimary
                             )
                         }
+                        Text(
+                            "Track the status of your service requests",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = ExtraServiceDarkTheme.textSecondary
+                        )
                     }
                 }
-            } else {
-                items(getAllState.succcess!!, key = { it.id }) { service ->
-                    ServiceRequestItem(
-                        service = service,
-                        onDelete = { extraServicesViewModel.deleteExtraService(service.id) }
-                    )
+
+                if (getAllState.isLoading) {
+                    item {
+                        LoadingCard()
+                    }
+                } else if (getAllState.error.isNotEmpty()) {
+                    item {
+                        ErrorCard(error = getAllState.error)
+                    }
+                } else if (getAllState.succcess.isNullOrEmpty()) {
+                    item {
+                        EmptyStateCard()
+                    }
+                } else {
+                    items(getAllState.succcess!!, key = { it.id }) { service ->
+                        ServiceRequestItem(
+                            service = service,
+                            onDelete = { extraServicesViewModel.deleteExtraService(service.id) }
+                        )
+                    }
                 }
             }
         }
@@ -285,199 +273,371 @@ fun RequestServiceCard(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = ExtraServiceDarkTheme.cardBackground
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, ExtraServiceDarkTheme.borderColor)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(10.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            ExtraServiceDarkTheme.primary.copy(alpha = 0.08f),
+                            Color.Transparent
                         ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Assignment,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(20.dp)
+                        radius = 400f
                     )
-                }
-                Column {
-                    Text(
-                        "Request Extra Service",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        "Fill in the details below",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            ExposedDropdownMenuBox(
-                expanded = isRouteDropdownExpanded,
-                onExpandedChange = { isRouteDropdownExpanded = it }
-            ) {
-                OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(),
-                    value = selectedRoute?.name ?: "",
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isRouteDropdownExpanded) },
-                    label = { Text("Route") },
-                    placeholder = { Text("Select your route") },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                    ),
-                    shape = RoundedCornerShape(12.dp)
                 )
-                ExposedDropdownMenu(
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                // Header
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                ExtraServiceDarkTheme.primary.copy(alpha = 0.15f),
+                                RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = ExtraServiceDarkTheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            "Request Extra Service",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = ExtraServiceDarkTheme.textPrimary
+                        )
+                        Text(
+                            "Fill in the details for additional waste collection",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = ExtraServiceDarkTheme.textSecondary
+                        )
+                    }
+                }
+
+                // Route Selection
+                ExposedDropdownMenuBox(
                     expanded = isRouteDropdownExpanded,
-                    onDismissRequest = { isRouteDropdownExpanded = false }
+                    onExpandedChange = { isRouteDropdownExpanded = it }
                 ) {
-                    routes.forEach { route ->
-                        DropdownMenuItem(
-                            text = { Text(route.name) },
-                            onClick = {
-                                selectedRoute = route
-                                isRouteDropdownExpanded = false
-                            }
-                        )
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        value = selectedRoute?.name ?: "",
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = isRouteDropdownExpanded
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Route,
+                                contentDescription = null,
+                                tint = ExtraServiceDarkTheme.textSecondary
+                            )
+                        },
+                        label = {
+                            Text(
+                                "Route",
+                                color = ExtraServiceDarkTheme.textSecondary
+                            )
+                        },
+                        placeholder = {
+                            Text(
+                                "Select your route",
+                                color = ExtraServiceDarkTheme.textSecondary.copy(alpha = 0.7f)
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = ExtraServiceDarkTheme.primary,
+                            unfocusedBorderColor = ExtraServiceDarkTheme.borderColor,
+                            focusedTextColor = ExtraServiceDarkTheme.textPrimary,
+                            unfocusedTextColor = ExtraServiceDarkTheme.textPrimary,
+                            cursorColor = ExtraServiceDarkTheme.primary,
+                            focusedLabelColor = ExtraServiceDarkTheme.primary,
+                            unfocusedLabelColor = ExtraServiceDarkTheme.textSecondary
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = isRouteDropdownExpanded,
+                        onDismissRequest = { isRouteDropdownExpanded = false },
+                        modifier = Modifier.background(ExtraServiceDarkTheme.cardBackground)
+                    ) {
+                        routes.forEach { route ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        route.name,
+                                        color = ExtraServiceDarkTheme.textPrimary
+                                    )
+                                },
+                                onClick = {
+                                    selectedRoute = route
+                                    isRouteDropdownExpanded = false
+                                },
+                                colors = MenuDefaults.itemColors(
+                                    textColor = ExtraServiceDarkTheme.textPrimary
+                                )
+                            )
+                        }
                     }
                 }
-            }
-            ExposedDropdownMenuBox(
-                expanded = isAreaDropdownExpanded,
-                onExpandedChange = { if (selectedRoute != null) isAreaDropdownExpanded = it }
-            ) {
+
+                // Area Selection
+                ExposedDropdownMenuBox(
+                    expanded = isAreaDropdownExpanded,
+                    onExpandedChange = { if (selectedRoute != null) isAreaDropdownExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        value = selectedArea?.areaName ?: "",
+                        onValueChange = {},
+                        readOnly = true,
+                        enabled = selectedRoute != null,
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = isAreaDropdownExpanded
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = if (selectedRoute != null)
+                                    ExtraServiceDarkTheme.textSecondary
+                                else
+                                    ExtraServiceDarkTheme.textSecondary.copy(alpha = 0.5f)
+                            )
+                        },
+                        label = {
+                            Text(
+                                "Area",
+                                color = ExtraServiceDarkTheme.textSecondary
+                            )
+                        },
+                        placeholder = {
+                            Text(
+                                if (selectedRoute != null) "Select your area" else "Select route first",
+                                color = ExtraServiceDarkTheme.textSecondary.copy(alpha = 0.7f)
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = ExtraServiceDarkTheme.primary,
+                            unfocusedBorderColor = ExtraServiceDarkTheme.borderColor,
+                            disabledBorderColor = ExtraServiceDarkTheme.borderColor.copy(alpha = 0.5f),
+                            focusedTextColor = ExtraServiceDarkTheme.textPrimary,
+                            unfocusedTextColor = ExtraServiceDarkTheme.textPrimary,
+                            disabledTextColor = ExtraServiceDarkTheme.textSecondary,
+                            cursorColor = ExtraServiceDarkTheme.primary,
+                            focusedLabelColor = ExtraServiceDarkTheme.primary,
+                            unfocusedLabelColor = ExtraServiceDarkTheme.textSecondary,
+                            disabledLabelColor = ExtraServiceDarkTheme.textSecondary.copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = isAreaDropdownExpanded,
+                        onDismissRequest = { isAreaDropdownExpanded = false },
+                        modifier = Modifier.background(ExtraServiceDarkTheme.cardBackground)
+                    ) {
+                        selectedRoute?.areaList?.forEach { area ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        area.areaName,
+                                        color = ExtraServiceDarkTheme.textPrimary
+                                    )
+                                },
+                                onClick = {
+                                    selectedArea = area
+                                    isAreaDropdownExpanded = false
+                                },
+                                colors = MenuDefaults.itemColors(
+                                    textColor = ExtraServiceDarkTheme.textPrimary
+                                )
+                            )
+                        }
+                    }
+                }
+
+                // Address Input
                 OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(),
-                    value = selectedArea?.areaName ?: "",
-                    onValueChange = {},
-                    readOnly = true,
-                    enabled = selectedRoute != null,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isAreaDropdownExpanded) },
-                    label = { Text("Area") },
-                    placeholder = { Text("Select your area") },
+                    value = address,
+                    onValueChange = { address = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = {
+                        Text(
+                            "Full Address",
+                            color = ExtraServiceDarkTheme.textSecondary
+                        )
+                    },
+                    placeholder = {
+                        Text(
+                            "Enter your street, house no, landmark",
+                            color = ExtraServiceDarkTheme.textSecondary.copy(alpha = 0.7f)
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = null,
+                            tint = ExtraServiceDarkTheme.textSecondary
+                        )
+                    },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        focusedBorderColor = ExtraServiceDarkTheme.primary,
+                        unfocusedBorderColor = ExtraServiceDarkTheme.borderColor,
+                        focusedTextColor = ExtraServiceDarkTheme.textPrimary,
+                        unfocusedTextColor = ExtraServiceDarkTheme.textPrimary,
+                        cursorColor = ExtraServiceDarkTheme.primary,
+                        focusedLabelColor = ExtraServiceDarkTheme.primary,
+                        unfocusedLabelColor = ExtraServiceDarkTheme.textSecondary
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
-                ExposedDropdownMenu(
-                    expanded = isAreaDropdownExpanded,
-                    onDismissRequest = { isAreaDropdownExpanded = false }
-                ) {
-                    selectedRoute?.areaList?.forEach { area ->
-                        DropdownMenuItem(
-                            text = { Text(area.areaName) },
-                            onClick = {
-                                selectedArea = area
-                                isAreaDropdownExpanded = false
-                            }
+
+                // Description Input
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = {
+                        Text(
+                            "Description",
+                            color = ExtraServiceDarkTheme.textSecondary
                         )
-                    }
-                }
-            }
-
-            OutlinedTextField(
-                value = address,
-                onValueChange = { address = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Full Address") },
-                placeholder = { Text("Enter your street, house no, landmark") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Description") },
-                placeholder = { Text("e.g., Large amount of garden waste") },
-                minLines = 2,
-                maxLines = 4,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Button(
-                onClick = {
-                    val route = selectedRoute
-                    val area = selectedArea
-                    if (route != null && area != null && address.isNotBlank() && description.isNotBlank()) {
-                        val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                        val serviceModel = ExtraServiceModel(
-                            address = address,
-                            description = description,
-                            routeId = route.id,
-                            routeName = route.name,
-                            areaId = area.areaId,
-                            areaName = area.areaName,
-                            date = currentDate
+                    },
+                    placeholder = {
+                        Text(
+                            "e.g., Large amount of garden waste, furniture disposal",
+                            color = ExtraServiceDarkTheme.textSecondary.copy(alpha = 0.7f)
                         )
-                        onServiceRequest(serviceModel)
-                        address = ""
-                        description = ""
-                        selectedRoute = null
-                        selectedArea = null
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                enabled = selectedRoute != null && selectedArea != null && address.isNotBlank() && description.isNotBlank() && !isLoading,
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Description,
+                            contentDescription = null,
+                            tint = ExtraServiceDarkTheme.textSecondary
+                        )
+                    },
+                    minLines = 3,
+                    maxLines = 5,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ExtraServiceDarkTheme.primary,
+                        unfocusedBorderColor = ExtraServiceDarkTheme.borderColor,
+                        focusedTextColor = ExtraServiceDarkTheme.textPrimary,
+                        unfocusedTextColor = ExtraServiceDarkTheme.textPrimary,
+                        cursorColor = ExtraServiceDarkTheme.primary,
+                        focusedLabelColor = ExtraServiceDarkTheme.primary,
+                        unfocusedLabelColor = ExtraServiceDarkTheme.textSecondary
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 )
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text(
-                        "Submit Request",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
-                    )
+
+                // Submit Button
+                Button(
+                    onClick = {
+                        val route = selectedRoute
+                        val area = selectedArea
+                        if (route != null && area != null && address.isNotBlank() && description.isNotBlank()) {
+                            val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                            val serviceModel = ExtraServiceModel(
+                                address = address,
+                                description = description,
+                                routeId = route.id,
+                                routeName = route.name,
+                                areaId = area.areaId,
+                                areaName = area.areaName,
+                                date = currentDate
+                            )
+                            onServiceRequest(serviceModel)
+                            address = ""
+                            description = ""
+                            selectedRoute = null
+                            selectedArea = null
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    enabled = selectedRoute != null && selectedArea != null &&
+                            address.isNotBlank() && description.isNotBlank() && !isLoading,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ExtraServiceDarkTheme.primary,
+                        disabledContainerColor = ExtraServiceDarkTheme.borderColor
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                ) {
+                    AnimatedVisibility(
+                        visible = isLoading,
+                        enter = scaleIn() + fadeIn(),
+                        exit = scaleOut() + fadeOut()
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                            Text(
+                                "Submitting...",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    AnimatedVisibility(
+                        visible = !isLoading,
+                        enter = scaleIn() + fadeIn(),
+                        exit = scaleOut() + fadeOut()
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Send,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = Color.White
+                            )
+                            Text(
+                                "Submit Request",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = Color.White
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -493,128 +653,204 @@ fun ServiceRequestItem(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(166, 107, 48)
+            containerColor = ExtraServiceDarkTheme.cardBackground
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, ExtraServiceDarkTheme.borderColor)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = service.routeName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            ExtraServiceDarkTheme.info.copy(alpha = 0.05f),
+                            Color.Transparent
+                        ),
+                        radius = 300f
                     )
-
+                )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Header Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = service.areaName,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    StatusChip(status = service.status)
-                    if (service.status.equals("Pending", ignoreCase = true)) {
-                        IconButton(
-                            onClick = onDelete,
-                            modifier = Modifier.size(36.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    ExtraServiceDarkTheme.info.copy(alpha = 0.15f),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete Request",
-                                tint = MaterialTheme.colorScheme.error,
+                                Icons.Default.Build,
+                                contentDescription = null,
+                                tint = ExtraServiceDarkTheme.info,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
+                        Column {
+                            Text(
+                                text = service.routeName,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = ExtraServiceDarkTheme.textPrimary
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = ExtraServiceDarkTheme.textSecondary
+                                )
+                                Text(
+                                    text = service.areaName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = ExtraServiceDarkTheme.textSecondary
+                                )
+                            }
+                        }
+                    }
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        StatusChip(status = service.status)
+                        if (service.status.equals("Pending", ignoreCase = true)) {
+                            IconButton(
+                                onClick = onDelete,
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(
+                                        ExtraServiceDarkTheme.error.copy(alpha = 0.1f),
+                                        CircleShape
+                                    )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Request",
+                                    tint = ExtraServiceDarkTheme.error,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = ExtraServiceDarkTheme.borderColor.copy(alpha = 0.5f))
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                // Details Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = ExtraServiceDarkTheme.surfaceVariant.copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "Address:",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        text = service.address,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Address
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Home,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = ExtraServiceDarkTheme.textSecondary
+                                )
+                                Text(
+                                    text = "Address:",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = ExtraServiceDarkTheme.textSecondary
+                                )
+                            }
+                            Text(
+                                text = service.address,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = ExtraServiceDarkTheme.textPrimary,
+                                lineHeight = 20.sp
+                            )
+                        }
 
-                    if (service.description.isNotBlank()) {
-                        Text(
-                            text = "Description:",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                        Text(
-                            text = service.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        // Description
+                        if (service.description.isNotBlank()) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Description,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = ExtraServiceDarkTheme.textSecondary
+                                    )
+                                    Text(
+                                        text = "Description:",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = ExtraServiceDarkTheme.textSecondary
+                                    )
+                                }
+                                Text(
+                                    text = service.description,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = ExtraServiceDarkTheme.textPrimary,
+                                    lineHeight = 20.sp
+                                )
+                            }
+                        }
                     }
                 }
-            }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Schedule,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Requested on ${service.date}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // Date
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = ExtraServiceDarkTheme.textSecondary
+                    )
+                    Text(
+                        text = "Requested on ${service.date}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ExtraServiceDarkTheme.textSecondary
+                    )
+                }
             }
         }
     }
@@ -624,43 +860,185 @@ fun ServiceRequestItem(
 fun StatusChip(status: String) {
     val (backgroundColor, contentColor, statusText) = when (status.lowercase()) {
         "pending" -> Triple(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer,
+            ExtraServiceDarkTheme.warning.copy(alpha = 0.15f),
+            ExtraServiceDarkTheme.warning,
             "Pending"
         )
         "approved" -> Triple(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
+            ExtraServiceDarkTheme.info.copy(alpha = 0.15f),
+            ExtraServiceDarkTheme.info,
             "Approved"
         )
         "completed" -> Triple(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.colorScheme.onTertiaryContainer,
+            ExtraServiceDarkTheme.success.copy(alpha = 0.15f),
+            ExtraServiceDarkTheme.success,
             "Completed"
         )
         "rejected" -> Triple(
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer,
+            ExtraServiceDarkTheme.error.copy(alpha = 0.15f),
+            ExtraServiceDarkTheme.error,
             "Rejected"
         )
         else -> Triple(
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.onSurfaceVariant,
+            ExtraServiceDarkTheme.surfaceVariant,
+            ExtraServiceDarkTheme.textSecondary,
             status
         )
     }
 
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = backgroundColor,
-        modifier = Modifier.clip(RoundedCornerShape(20.dp))
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        border = BorderStroke(1.dp, contentColor.copy(alpha = 0.3f))
     ) {
         Text(
-            text = statusText,
+            text = statusText.uppercase(),
             color = contentColor,
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            letterSpacing = 0.5.sp,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )
+    }
+}
+
+@Composable
+private fun LoadingCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = ExtraServiceDarkTheme.cardBackground
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, ExtraServiceDarkTheme.borderColor)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CircularProgressIndicator(
+                color = ExtraServiceDarkTheme.primary,
+                modifier = Modifier.size(48.dp)
+            )
+            Text(
+                "Loading your requests...",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                color = ExtraServiceDarkTheme.textPrimary
+            )
+            Text(
+                "Please wait while we fetch your service requests",
+                style = MaterialTheme.typography.bodyMedium,
+                color = ExtraServiceDarkTheme.textSecondary,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorCard(error: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = ExtraServiceDarkTheme.cardBackground
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, ExtraServiceDarkTheme.error.copy(alpha = 0.3f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .background(ExtraServiceDarkTheme.error.copy(alpha = 0.15f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Error,
+                    contentDescription = null,
+                    tint = ExtraServiceDarkTheme.error,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            Text(
+                text = "Failed to load requests",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = ExtraServiceDarkTheme.textPrimary,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = error,
+                style = MaterialTheme.typography.bodyMedium,
+                color = ExtraServiceDarkTheme.textSecondary,
+                textAlign = TextAlign.Center,
+                lineHeight = 20.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyStateCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = ExtraServiceDarkTheme.cardBackground
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, ExtraServiceDarkTheme.borderColor)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(ExtraServiceDarkTheme.surfaceVariant, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Assignment,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = ExtraServiceDarkTheme.textSecondary
+                )
+            }
+            Text(
+                text = "No requests yet",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = ExtraServiceDarkTheme.textPrimary,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = "You haven't made any extra service requests. Use the form above to request additional waste collection services for your area.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = ExtraServiceDarkTheme.textSecondary,
+                textAlign = TextAlign.Center,
+                lineHeight = 20.sp
+            )
+        }
     }
 }
