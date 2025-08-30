@@ -6,8 +6,13 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.EaseInOutCubic
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -16,6 +21,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -59,7 +65,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PaintingStyle.Companion.Stroke
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -190,7 +207,7 @@ fun AppNavigation(
                     )
                 ) + fadeOut(animationSpec = tween(durationMillis = BOTTOM_BAR_ANIM_DURATION))
             ) {
-                SmoothBottomBar(
+                AnimatedBorderSurface(
                     selectedItemIndex = selectedItemIndex,
                     items = bottomBarItems,
                     onItemSelected = { index ->
@@ -292,7 +309,6 @@ fun AppNavigation(
 
 
 
-
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun SmoothBottomBar(
@@ -301,64 +317,105 @@ fun SmoothBottomBar(
     onItemSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    // Animation state for running border
+    val infiniteTransition = rememberInfiniteTransition(label = "border_anim")
+    val animatedSweep by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "border_anim"
+    )
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp)
-
-            .navigationBarsPadding(),
-        shape = CircleShape,
-        shadowElevation = 8.dp,
-        color = MaterialTheme.colorScheme.surfaceVariant,
+            .navigationBarsPadding()
     ) {
-        BoxWithConstraints(
+        // Animated border using Canvas
+        Canvas(
+            modifier = Modifier
+                .matchParentSize()
+        ) {
+            val borderWidth = 6.dp.toPx()
+            val diameter = size.minDimension - borderWidth
+            val topLeft = Offset(
+                (size.width - diameter) / 2,
+                (size.height - diameter) / 2
+            )
+
+
+        }
+
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp)
-                .background(Color.Black)
-
-        ) {
-            val itemWidth = maxWidth / items.size
-
-            val indicatorOffset by animateDpAsState(
-                targetValue = itemWidth * selectedItemIndex,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
+                .padding(2.dp)
+                .border(
+                    width = 3.dp,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    shape = CircleShape
+                )
+                .padding(2.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                    shape = CircleShape
                 ),
-                label = "indicator_offset"
-            )
-
-            val indicatorColor by animateColorAsState(
-                targetValue = items[selectedItemIndex].color.copy(alpha = 0.2f),
-                animationSpec = tween(400, easing = EaseInOutCubic),
-                label = "indicator_color"
-            )
-
-            Box(
+            shape = CircleShape,
+            shadowElevation = 8.dp,
+            color = MaterialTheme.colorScheme.surfaceVariant,
+        ) {
+            BoxWithConstraints(
                 modifier = Modifier
-                    .offset(x = indicatorOffset)
-                    .width(itemWidth)
-                    .fillMaxSize()
-                    .padding(6.dp)
-                    .clip(CircleShape)
-
-
-                    .background(indicatorColor)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .background(Color.Black)
             ) {
-                items.forEachIndexed { index, item ->
-                    SmoothBottomBarItem(
-                        modifier = Modifier.width(itemWidth),
-                        item = item,
-                        isSelected = selectedItemIndex == index,
-                        onClick = { onItemSelected(index) }
-                    )
+                val itemWidth = maxWidth / items.size
+
+                val indicatorOffset by animateDpAsState(
+                    targetValue = itemWidth * selectedItemIndex,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    ),
+                    label = "indicator_offset"
+                )
+
+                val indicatorColor by animateColorAsState(
+                    targetValue = items[selectedItemIndex].color.copy(alpha = 0.2f),
+                    animationSpec = tween(400, easing = EaseInOutCubic),
+                    label = "indicator_color"
+                )
+
+                Box(
+                    modifier = Modifier
+                        .offset(x = indicatorOffset)
+                        .width(itemWidth)
+                        .fillMaxSize()
+                        .padding(6.dp)
+                        .clip(CircleShape)
+                        .background(indicatorColor)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    items.forEachIndexed { index, item ->
+                        SmoothBottomBarItem(
+                            modifier = Modifier.width(itemWidth),
+                            item = item,
+                            isSelected = selectedItemIndex == index,
+                            onClick = { onItemSelected(index) }
+                        )
+                    }
                 }
             }
         }
@@ -408,6 +465,112 @@ fun SmoothBottomBarItem(
                 color = item.color,
                 modifier = Modifier.padding(top = 4.dp)
             )
+        }
+    }
+}
+
+@SuppressLint("UnusedBoxWithConstraintsScope")
+@Composable
+fun AnimatedBorderSurface(
+    modifier: Modifier = Modifier,
+    items: List<BottomBarItem>,
+    selectedItemIndex: Int,
+    onItemSelected: (Int) -> Unit
+) {
+    // Infinite rotation animation
+    val infiniteTransition = rememberInfiniteTransition(label = "border_rotation")
+    val angle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "angle_anim"
+    )
+
+    Box(
+        modifier = modifier
+            .padding(4.dp)
+            .drawBehind {
+                val strokeWidth = 6.dp.toPx()
+                val radius = size.minDimension / 2
+
+                // Sweep gradient that rotates
+                val brush = Brush.sweepGradient(
+                    colors = listOf(
+                        Color(0xFF00F5FF), // Neon Cyan
+                        Color(0xFF7000FF), // Neon Purple
+                        Color(0xFF0D0D0D), // Dark Charcoal (AI dark)
+                        Color(0xFF00FFA8), // Futuristic Teal Green
+                        Color(0xFF00F5FF)  // Back to Neon Cyan for smooth loop
+                    ),
+                    center = center
+                )
+
+                // Save canvas state
+                rotate(angle, pivot = center) {
+                    drawCircle(
+                        brush = brush,
+                        radius = radius,
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                    )
+                }
+            }
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth().height(64.dp),
+            shape = CircleShape,
+            shadowElevation = 8.dp,
+            color = MaterialTheme.colorScheme.surfaceVariant,
+        ) {
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+            ) {
+                val itemWidth = maxWidth / items.size
+
+                val indicatorOffset by animateDpAsState(
+                    targetValue = itemWidth * selectedItemIndex,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    ),
+                    label = "indicator_offset"
+                )
+
+                val indicatorColor by animateColorAsState(
+                    targetValue = items[selectedItemIndex].color.copy(alpha = 0.2f),
+                    animationSpec = tween(400, easing = EaseInOutCubic),
+                    label = "indicator_color"
+                )
+
+                Box(
+                    modifier = Modifier
+                        .offset(x = indicatorOffset)
+                        .width(itemWidth)
+                        .fillMaxSize()
+                        .padding(6.dp)
+                        .clip(CircleShape)
+                        .background(indicatorColor)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    items.forEachIndexed { index, item ->
+                        SmoothBottomBarItem(
+                            modifier = Modifier.width(itemWidth),
+                            item = item,
+                            isSelected = selectedItemIndex == index,
+                            onClick = { onItemSelected(index) }
+                        )
+                    }
+                }
+            }
         }
     }
 }

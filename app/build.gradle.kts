@@ -136,11 +136,7 @@ dependencies {
 
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
-//    implementation("com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android:+")
-    implementation("com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android:3.9.10")
-// or latest
 
-    implementation("com.github.ZEGOCLOUD:zego_uikit_signaling_plugin_android:+")
 
 
 

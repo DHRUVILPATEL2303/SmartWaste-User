@@ -115,41 +115,50 @@ fun ChatBotScreenUI(
             }
         }
     }
-
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Eco,
-                            contentDescription = "Eco Icon",
-                            tint = PrimaryGreen,
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Column {
-                            Text(
-                                "SmartWaste Assistant",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                color = OnSurfaceText
+            Box(
+
+            ) {
+                TopAppBar(
+
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Eco,
+                                contentDescription = "Eco Icon",
+                                tint = PrimaryGreen,
+                                modifier = Modifier.size(32.dp)
                             )
-                            Text(
-                                "Your AI Helper",
-                                fontSize = 12.sp,
-                                color = OnSurfaceTextVariant,
-                                fontWeight = FontWeight.Medium
-                            )
+                            Column {
+                                Text(
+                                    "SmartWaste Assistant",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = OnSurfaceText
+                                )
+                                Text(
+                                    "Your AI Helper",
+                                    fontSize = 12.sp,
+                                    color = OnSurfaceTextVariant,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+
+
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(10, 59, 18, 200) // Slightly transparent
-                ),
-            )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color(10, 59, 18, 200) // Slightly transparent
+                    ),
+                    modifier = Modifier.clip(RoundedCornerShape(32.dp)),
+                )
+
+
+            }
         },
         containerColor = Color.Transparent // Make scaffold background transparent
     ) { paddingValues ->
