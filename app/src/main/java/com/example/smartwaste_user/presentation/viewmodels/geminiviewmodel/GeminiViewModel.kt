@@ -3,6 +3,8 @@ package com.example.smartwaste_user.presentation.viewmodels.geminiviewmodel
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smartwaste_user.common.ResultState
@@ -92,24 +94,58 @@ class GeminiViewModel @Inject constructor(
         }
     }
 
+
     private suspend fun handleTextPrompt(prompt: String) {
-        val response = getTextResponseUseCase.getTextReponse(prompt)
-        _chatState.update {
-            it.copy(
-                messages = it.messages + Message(text = response, isFromUser = false),
-                isLoading = false
-            )
+        getTextResponseUseCase.getTextReponse(prompt).collect { result ->
+            when (result) {
+                is ResultState.Success -> {
+                    _chatState.update { state ->
+                        val updatedMessages = state.messages.toMutableList()
+                        if (updatedMessages.isNotEmpty() && !updatedMessages.last().isFromUser) {
+                            // update last bot message
+                            val last = updatedMessages.removeAt(updatedMessages.lastIndex)
+                            updatedMessages.add(last.copy(text = result.data))
+                        } else {
+                            // first bot response
+                            updatedMessages.add(Message(text = result.data, isFromUser = false))
+                        }
+                        state.copy(messages = updatedMessages, isLoading = false)
+                    }
+                }
+                is ResultState.Error -> {
+                    _chatState.update {
+                        it.copy(error = result.error, isLoading = false)
+                    }
+                }
+                is ResultState.Loading -> {
+                }
+            }
         }
     }
 
     private suspend fun handleImagePrompt(imageUri: Uri, prompt: String) {
         val finalPrompt = prompt.ifBlank { "Analyze this waste image and provide recycling guidance." }
-        val response = getResponseForImageUseCase.getREsponseforImageUSeCAse(finalPrompt, imageUri)
-        _chatState.update {
-            it.copy(
-                messages = it.messages + Message(text = response, isFromUser = false),
-                isLoading = false
-            )
+        getResponseForImageUseCase.getREsponseforImageUSeCAse(finalPrompt, imageUri).collect { result ->
+            when (result) {
+                is ResultState.Success -> {
+                    _chatState.update { state ->
+                        val updatedMessages = state.messages.toMutableList()
+                        if (updatedMessages.isNotEmpty() && !updatedMessages.last().isFromUser) {
+                            val last = updatedMessages.removeAt(updatedMessages.lastIndex)
+                            updatedMessages.add(last.copy(text = result.data))
+                        } else {
+                            updatedMessages.add(Message(text = result.data, isFromUser = false))
+                        }
+                        state.copy(messages = updatedMessages, isLoading = false)
+                    }
+                }
+                is ResultState.Error -> {
+                    _chatState.update {
+                        it.copy(error = result.error, isLoading = false)
+                    }
+                }
+                is ResultState.Loading -> { }
+            }
         }
     }
 

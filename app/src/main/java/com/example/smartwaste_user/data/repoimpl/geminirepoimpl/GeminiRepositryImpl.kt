@@ -9,6 +9,7 @@ import android.os.Build
 import com.example.smartwaste_user.common.ResultState
 import com.example.smartwaste_user.domain.repo.geminirepositry.GeminiRepository
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.content
 
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,46 +26,58 @@ class GeminiRepositoryImpl @Inject constructor(
 ) : GeminiRepository {
 
 
-    override suspend fun askTextQuestion(question: String): String =
-        withContext(Dispatchers.IO) {
+    override suspend fun askTextQuestion(question: String): Flow<ResultState<String>> = flow {
+        val modifiedPrompt = """
+        You are an assistant and give short, user-friendly answers. 
+        If the following question is about **waste** (garbage collection, recycling, smart waste, plastic, garbage, etc.), 
+        then answer it properly.
+
+        Question: $question
+    """.trimIndent()
+
+        generativeModel.generateContentStream(modifiedPrompt).collect { chunk: GenerateContentResponse ->
+            chunk.text?.let { emit(ResultState.Success(it)) }
+        }
+    }
+
+
+
+
+    override suspend fun askImageQuestion(
+        question: String,
+        imageUri: Uri
+    ): Flow<ResultState<String>> = flow {
+        emit(ResultState.Loading)
+
+        try {
+            val bitmap = uriToBitmap(imageUri)
             val modifiedPrompt = """
-            You are an assistant and give short answer and user friendly . 
-            If the following question is about **waste** (garbage collection, recycling, smart waste, plastic,garbage,every type of waste), 
+            You are an assistant and give short, user-friendly answers. 
+            If the following question is about **waste** (garbage collection, recycling, smart waste, plastic, garbage, every type of waste), 
             then answer it properly. 
-
 
             Question: $question
         """.trimIndent()
 
-            val response = generativeModel.generateContent(modifiedPrompt)
-            response.text ?: "No response from AI"
-        }
+            val builder = StringBuilder()
 
-
-    override suspend fun askImageQuestion(question: String, imageUri: Uri): String =
-        withContext(Dispatchers.IO) {
-            try {
-                val bitmap = uriToBitmap(imageUri)
-                val modifiedPrompt = """
-            You are an assistant and give short answer and user friendly . 
-            If the following question is about **waste** (garbage collection, recycling, smart waste, plastic,garbage,every type of waste), 
-            then answer it properly. 
-
-
-            Question: $question
-        """.trimIndent()
-                val response = generativeModel.generateContent(
-                    content {
-                        image(bitmap)
-                        text(modifiedPrompt)
-                    }
-                )
-                response.text ?: "No response from AI"
-            } catch (e: Exception) {
-                e.printStackTrace()
-                "Error: ${e.message}"
+            generativeModel.generateContentStream(
+                content {
+                    image(bitmap)
+                    text(modifiedPrompt)
+                }
+            ).collect { chunk ->
+                val partial = chunk.text
+                if (!partial.isNullOrBlank()) {
+                    builder.append(partial)
+                    emit(ResultState.Success(builder.toString()))
+                }
             }
+
+        } catch (e: Exception) {
+            emit(ResultState.Error(e.message ?: "Error processing image"))
         }
+    }
 
     override suspend fun askVideoQuestion(
         question: String,

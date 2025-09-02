@@ -1,5 +1,7 @@
 package com.example.smartwaste_user.presentation.screens.notification
 
+import android.content.Intent
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,24 +25,28 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.OndemandVideo
+import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,6 +54,18 @@ import androidx.navigation.NavHostController
 import com.example.smartwaste_user.data.models.HolidayModel
 import com.example.smartwaste_user.presentation.navigation.Routes
 import com.example.smartwaste_user.presentation.viewmodels.HolidayViewModel
+import com.google.mlkit.common.model.DownloadConditions
+import com.google.mlkit.nl.translate.TranslateLanguage
+import com.google.mlkit.nl.translate.Translation
+import com.google.mlkit.nl.translate.TranslatorOptions
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import org.json.JSONObject
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -74,11 +92,76 @@ fun NotificationScreenUI(
 ) {
     val holidayState by holidayViewModel.holidayState.collectAsState()
 
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+    val context = LocalContext.current
+
+    val textToSpeech : TextToSpeech?=null
+    DisposableEffect(Unit) {
+        val textToSpeech = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                val result = textToSpeech?.setLanguage(Locale("gu", "IN"))
+                Log.d("TTS", "TTS init status=$status, setLanguage(Gujarati) result=$result")
+
+                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Log.e("TTS", "Gujarati language is not supported or missing data.")
+                    val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(installIntent)
+
+                } else {
+                    val gujaratiVoices = textToSpeech?.voices?.filter { it.locale == Locale("gu", "IN") }
+
+                    if (gujaratiVoices != null) {
+                        if (gujaratiVoices.isEmpty()) {
+                            Log.w("TTS", "No Gujarati voices were found. Prompting user to install.")
+                            val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(installIntent)
+                        } else {
+                            Log.d("TTS", "----------- AVAILABLE GUJARATI VOICES -----------")
+                            gujaratiVoices.forEach { voice ->
+                                Log.d("TTS", "Voice Name: ${voice.name}, Features: ${voice.features}")
+                            }
+                            Log.d("TTS", "--------------------------------------------------")
+
+                            val maleVoice = gujaratiVoices?.firstOrNull { voice ->
+                                voice.name.contains("male", ignoreCase = true) ||
+                                        voice.features.contains("genderMale")
+                            }
+
+                            if (maleVoice != null) {
+                                textToSpeech.voice = maleVoice
+                                Log.d("TTS", "SUCCESS: Found and set a male Gujarati voice: ${maleVoice.name}")
+                            } else {
+                                Log.w("TTS", "Male Gujarati voice not found. Redirecting user to TTS settings to install it.")
+                                val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                if (installIntent.resolveActivity(context.packageManager) != null) {
+                                    context.startActivity(installIntent)
+                                } else {
+                                    Log.e("TTS", "Could not resolve activity for ACTION_INSTALL_TTS_DATA")
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                Log.e("TTS", "TTS Initialization failed with status=$status")
+            }
+        }
+        tts = textToSpeech
+        onDispose {
+            textToSpeech.stop()
+            textToSpeech.shutdown()
+        }
+    }
+
     LaunchedEffect(Unit) {
         holidayViewModel.getAllHolidays()
     }
-
-    Log.d("holidays", holidayState.toString())
 
     Box(
         modifier = Modifier
@@ -99,59 +182,31 @@ fun NotificationScreenUI(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                HeaderSection()
-            }
-
-            item {
-                ActionCardsSection(navController)
-            }
+            item { HeaderSection() }
+            item { ActionCardsSection(navController) }
 
             when {
-                holidayState.isLoading -> {
-                    item {
-                        LoadingSection()
-                    }
-                }
-
-                holidayState.error.isNotEmpty() -> {
-                    item {
-                        ErrorSection(error = holidayState.error)
-                    }
-                }
-
+                holidayState.isLoading -> item { LoadingSection() }
+                holidayState.error.isNotEmpty() -> item { ErrorSection(error = holidayState.error) }
                 holidayState.success != null && holidayState.success!!.isNotEmpty() -> {
                     val allHolidays = getAllHolidaysSorted(holidayState.success!!)
-                    Log.d("holidays_filtered", "Filtered holidays: $allHolidays")
-
                     item {
                         SectionHeader(
                             title = "Upcoming Holidays",
                             subtitle = "${allHolidays.size} holidays scheduled"
                         )
                     }
-
                     if (allHolidays.isEmpty()) {
-                        item {
-                            EmptyHolidaysSection()
-                        }
+                        item { EmptyHolidaysSection() }
                     } else {
                         items(allHolidays) { holiday ->
-                            EnhancedHolidayCard(holiday = holiday)
+                            EnhancedHolidayCard(holiday = holiday, tts = tts)
                         }
                     }
                 }
-
-                else -> {
-                    item {
-                        EmptyHolidaysSection()
-                    }
-                }
+                else -> item { EmptyHolidaysSection() }
             }
-
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
-            }
+            item { Spacer(modifier = Modifier.height(32.dp)) }
         }
     }
 }
@@ -160,9 +215,7 @@ fun NotificationScreenUI(
 private fun HeaderSection() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = DarkTheme.cardBackground
-        ),
+        colors = CardDefaults.cardColors(containerColor = DarkTheme.cardBackground),
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
@@ -171,10 +224,7 @@ private fun HeaderSection() {
                 .fillMaxWidth()
                 .background(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            DarkTheme.primary.copy(alpha = 0.1f),
-                            Color.Transparent
-                        ),
+                        colors = listOf(DarkTheme.primary.copy(alpha = 0.1f), Color.Transparent),
                         radius = 300f
                     )
                 )
@@ -184,7 +234,6 @@ private fun HeaderSection() {
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(32.dp)
             ) {
-                // Icon with animated background
                 Box(
                     modifier = Modifier
                         .size(80.dp)
@@ -206,24 +255,20 @@ private fun HeaderSection() {
                         modifier = Modifier.size(36.dp)
                     )
                 }
-
                 Spacer(modifier = Modifier.height(20.dp))
-
                 Text(
                     text = "Smart Waste Notifications",
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = DarkTheme.textPrimary
                 )
-
                 Spacer(modifier = Modifier.height(8.dp))
-
                 Text(
                     text = "Stay updated with waste collection schedules, holidays, and important announcements",
                     fontSize = 15.sp,
                     color = DarkTheme.textSecondary,
                     lineHeight = 22.sp,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -232,9 +277,7 @@ private fun HeaderSection() {
 
 @Composable
 private fun ActionCardsSection(navController: NavHostController) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         ActionCard(
             title = "Editorial Content",
             subtitle = "View waste management guides and tips",
@@ -242,7 +285,6 @@ private fun ActionCardsSection(navController: NavHostController) {
             iconColor = DarkTheme.accent,
             onClick = { navController.navigate(Routes.EditorialScreen) }
         )
-
         ActionCard(
             title = "Holiday Calendar",
             subtitle = "Check collection schedule during holidays",
@@ -265,9 +307,7 @@ private fun ActionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = DarkTheme.cardBackground
-        ),
+        colors = CardDefaults.cardColors(containerColor = DarkTheme.cardBackground),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -280,10 +320,7 @@ private fun ActionCard(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(
-                        color = iconColor.copy(alpha = 0.15f),
-                        shape = CircleShape
-                    ),
+                    .background(color = iconColor.copy(alpha = 0.15f), shape = CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -293,12 +330,8 @@ private fun ActionCard(
                     modifier = Modifier.size(24.dp)
                 )
             }
-
             Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
                     fontSize = 16.sp,
@@ -306,13 +339,8 @@ private fun ActionCard(
                     color = DarkTheme.textPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = subtitle,
-                    fontSize = 14.sp,
-                    color = DarkTheme.textSecondary
-                )
+                Text(text = subtitle, fontSize = 14.sp, color = DarkTheme.textSecondary)
             }
-
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "Navigate",
@@ -339,11 +367,7 @@ private fun SectionHeader(title: String, subtitle: String) {
                 fontWeight = FontWeight.Bold,
                 color = DarkTheme.textPrimary
             )
-            Text(
-                text = subtitle,
-                fontSize = 14.sp,
-                color = DarkTheme.textSecondary
-            )
+            Text(text = subtitle, fontSize = 14.sp, color = DarkTheme.textSecondary)
         }
     }
 }
@@ -352,31 +376,22 @@ private fun SectionHeader(title: String, subtitle: String) {
 private fun LoadingSection() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = DarkTheme.cardBackground
-        ),
+        colors = CardDefaults.cardColors(containerColor = DarkTheme.cardBackground),
         shape = RoundedCornerShape(16.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(40.dp),
-            contentAlignment = Alignment.Center
+                .padding(40.dp), contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(
                     color = DarkTheme.primary,
                     modifier = Modifier.size(40.dp),
                     strokeWidth = 3.dp
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Loading holidays...",
-                    color = DarkTheme.textSecondary,
-                    fontSize = 14.sp
-                )
+                Text(text = "Loading holidays...", color = DarkTheme.textSecondary, fontSize = 14.sp)
             }
         }
     }
@@ -386,21 +401,15 @@ private fun LoadingSection() {
 private fun ErrorSection(error: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = DarkTheme.accent.copy(alpha = 0.1f)
-        ),
+        colors = CardDefaults.cardColors(containerColor = DarkTheme.accent.copy(alpha = 0.1f)),
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(20.dp), verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "⚠️",
-                fontSize = 24.sp
-            )
+            Text(text = "⚠️", fontSize = 24.sp)
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
@@ -409,11 +418,7 @@ private fun ErrorSection(error: String) {
                     fontWeight = FontWeight.SemiBold,
                     color = DarkTheme.accent
                 )
-                Text(
-                    text = error,
-                    fontSize = 14.sp,
-                    color = DarkTheme.textSecondary
-                )
+                Text(text = error, fontSize = 14.sp, color = DarkTheme.textSecondary)
             }
         }
     }
@@ -423,9 +428,7 @@ private fun ErrorSection(error: String) {
 private fun EmptyHolidaysSection() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = DarkTheme.cardBackground
-        ),
+        colors = CardDefaults.cardColors(containerColor = DarkTheme.cardBackground),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
@@ -434,10 +437,7 @@ private fun EmptyHolidaysSection() {
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "🗓️",
-                fontSize = 48.sp
-            )
+            Text(text = "🗓️", fontSize = 48.sp)
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "No Upcoming Holidays",
@@ -450,7 +450,7 @@ private fun EmptyHolidaysSection() {
                 text = "All holidays are in the past or no holidays are currently scheduled",
                 color = DarkTheme.textSecondary,
                 fontSize = 14.sp,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -459,13 +459,30 @@ private fun EmptyHolidaysSection() {
 @Composable
 fun EnhancedHolidayCard(
     holiday: HolidayModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    tts: TextToSpeech? = null
 ) {
+    var translatedName by remember { mutableStateOf(holiday.holidayName) }
+    var translatedDate by remember { mutableStateOf(formatHolidayDate(holiday.holidayDate)) }
+
+    LaunchedEffect(key1 = holiday) {
+        translateText(
+            text = holiday.holidayName,
+            targetLang = TranslateLanguage.GUJARATI,
+            onResult = { translated -> translatedName = translated },
+            onError = { e -> Log.e("Translate", "Failed to translate name: ${e.message}") }
+        )
+        translateText(
+            text = formatHolidayDate(holiday.holidayDate),
+            targetLang = TranslateLanguage.GUJARATI,
+            onResult = { translated -> translatedDate = translated },
+            onError = { e -> Log.e("Translate", "Failed to translate date: ${e.message}") }
+        )
+    }
+
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = DarkTheme.cardBackground
-        ),
+        colors = CardDefaults.cardColors(containerColor = DarkTheme.cardBackground),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -475,7 +492,6 @@ fun EnhancedHolidayCard(
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Simple calendar icon instead of specific holiday icons
             Box(
                 modifier = Modifier
                     .size(56.dp)
@@ -497,24 +513,19 @@ fun EnhancedHolidayCard(
                     modifier = Modifier.size(24.dp)
                 )
             }
-
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
+                // Display the translated name
                 Text(
-                    text = holiday.holidayName,
+                    text = translatedName,
                     color = DarkTheme.textPrimary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2
                 )
                 Spacer(modifier = Modifier.height(6.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.CalendarToday,
                         contentDescription = "Date",
@@ -522,57 +533,41 @@ fun EnhancedHolidayCard(
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
+                    // Display the translated date
                     Text(
-                        text = formatHolidayDate(holiday.holidayDate),
+                        text = translatedDate,
                         color = DarkTheme.textSecondary,
                         fontSize = 14.sp
                     )
                 }
-
-                // Days until holiday
-                val daysUntil = getDaysUntilHoliday(holiday.holidayDate)
-                if (daysUntil >= 0) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = when {
-                            daysUntil == 0 -> "Today"
-                            daysUntil == 1 -> "Tomorrow"
-                            daysUntil <= 7 -> "In $daysUntil days"
-                            daysUntil <= 30 -> "In ${daysUntil / 7} weeks"
-                            else -> "In ${daysUntil / 30} months"
-                        },
-                        color = when {
-                            daysUntil <= 1 -> DarkTheme.accent
-                            daysUntil <= 7 -> DarkTheme.warning
-                            else -> DarkTheme.success
-                        },
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
             }
+
+            Icon(
+                imageVector = Icons.Default.Speaker,
+                contentDescription = "Speak holiday",
+                tint = DarkTheme.accent,
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable {
+                        val speechText = "$translatedName ની રજા $translatedDate ના રોજ છે."
+                        Log.d("TTS", "Speaking (Gujarati): $speechText")
+                        tts?.speak(speechText, TextToSpeech.QUEUE_FLUSH, null, null)
+                    }
+            )
         }
     }
 }
 
-// Fixed date parsing functions to handle dd-MM-yyyy format
 fun getAllHolidaysSorted(holidays: List<HolidayModel>): List<HolidayModel> {
-    val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()) // Changed format
+    val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
     val currentDate = Date()
-
-    Log.d("holidays_debug", "Current date: ${dateFormat.format(currentDate)}")
-
     return holidays
         .filter { holiday ->
             try {
                 val holidayDate = dateFormat.parse(holiday.holidayDate)
-                Log.d("holidays_debug", "Parsing ${holiday.holidayName}: ${holiday.holidayDate} -> $holidayDate")
-
-                // Include today's holidays and future holidays
                 if (holidayDate != null) {
                     val isToday = dateFormat.format(holidayDate) == dateFormat.format(currentDate)
                     val isFuture = holidayDate.after(currentDate)
-                    Log.d("holidays_debug", "Holiday ${holiday.holidayName}: isToday=$isToday, isFuture=$isFuture")
                     isToday || isFuture
                 } else {
                     false
@@ -593,34 +588,79 @@ fun getAllHolidaysSorted(holidays: List<HolidayModel>): List<HolidayModel> {
 
 fun formatHolidayDate(dateString: String): String {
     return try {
-        val inputFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()) // Changed format
+        val inputFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
         val outputFormat = SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault())
         val date = inputFormat.parse(dateString)
-        if (date != null) {
-            outputFormat.format(date)
-        } else {
-            dateString
-        }
+        date?.let { outputFormat.format(it) } ?: dateString
     } catch (e: Exception) {
         Log.e("date_format", "Error formatting date: $dateString", e)
         dateString
     }
 }
 
-fun getDaysUntilHoliday(dateString: String): Int {
-    return try {
-        val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()) // Changed format
-        val holidayDate = dateFormat.parse(dateString)
-        val currentDate = Date()
+fun translateText(
+    text: String,
+    targetLang: String,
+    onResult: (String) -> Unit,
+    onError: (Exception) -> Unit
+) {
+    val options = TranslatorOptions.Builder()
+        .setSourceLanguage(TranslateLanguage.ENGLISH)
+        .setTargetLanguage(targetLang)
+        .build()
 
-        if (holidayDate != null) {
-            val diffInMillis = holidayDate.time - currentDate.time
-            (diffInMillis / (1000 * 60 * 60 * 24)).toInt()
-        } else {
-            -1
+    val translator = Translation.getClient(options)
+
+    val conditions = DownloadConditions.Builder()
+        .requireWifi()
+        .build()
+
+    translator.downloadModelIfNeeded(conditions)
+        .addOnSuccessListener {
+            translator.translate(text)
+                .addOnSuccessListener(onResult)
+                .addOnFailureListener(onError)
         }
-    } catch (e: Exception) {
-        Log.e("date_calc", "Error calculating days until holiday: $dateString", e)
-        -1
-    }
+        .addOnFailureListener(onError)
+}
+
+
+fun translateTextUsingGoogleTranslateApi(
+    apiKey: String,
+    text: String,
+    targetLang: String,
+    onSuccess: (String) -> Unit,
+    onFailure: (Exception) -> Unit
+) {
+    val url = "https://translation.googleapis.com/language/translate/v2"
+    val requestBody = FormBody.Builder()
+        .add("q", text)
+        .add("target", targetLang)
+        .add("format", "text")
+        .add("key", apiKey)
+        .build()
+
+    val request = Request.Builder()
+        .url(url)
+        .post(requestBody)
+        .build()
+
+    OkHttpClient().newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            onFailure(e)
+        }
+
+        override fun onResponse(call: Call, response: Response) {
+            response.use {
+                if (!it.isSuccessful) return onFailure(Exception("HTTP error ${it.code}"))
+                val json = JSONObject(it.body!!.string())
+                val translated = json
+                    .getJSONObject("data")
+                    .getJSONArray("translations")
+                    .getJSONObject(0)
+                    .getString("translatedText")
+                onSuccess(translated)
+            }
+        }
+    })
 }

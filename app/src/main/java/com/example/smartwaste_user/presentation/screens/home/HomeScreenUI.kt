@@ -151,7 +151,8 @@ fun HomeScreenUI(
                             containerColor = if (snackbarData.visuals.message.contains("success", true))
                                 HomeDarkTheme.success else HomeDarkTheme.error,
                             contentColor = Color.White,
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.padding(bottom = 100.dp)
                         )
                     }
                 )

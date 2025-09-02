@@ -5,8 +5,8 @@ import com.example.smartwaste_user.common.ResultState
 import kotlinx.coroutines.flow.Flow
 
 interface GeminiRepository {
-    suspend fun askTextQuestion(question: String): String
-    suspend fun askImageQuestion(question: String, imageUri: Uri): String
+    suspend fun askTextQuestion(question: String): Flow<ResultState<String>>
+    suspend fun askImageQuestion(question: String, imageUri: Uri): Flow<ResultState<String>>
 
     suspend fun askVideoQuestion(question : String, videoUri: Uri) : Flow<ResultState<String>>
 }
