@@ -145,6 +145,8 @@ dependencies {
     implementation("com.google.mlkit:translate:17.0.2")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
 
+//    implementation("com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android:+")
+
 
 
 }
