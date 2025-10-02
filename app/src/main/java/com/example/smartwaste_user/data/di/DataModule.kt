@@ -5,6 +5,9 @@ import androidx.compose.ui.res.stringResource
 import com.example.smartwaste_user.R
 import com.example.smartwaste_user.datastore.DataStoreManager
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.GenerationConfig
+import com.google.ai.client.generativeai.type.RequestOptions
+import com.google.ai.client.generativeai.type.content
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
@@ -55,7 +58,14 @@ object DataModule {
     fun provideGenerativeModel(@ApplicationContext context: Context): GenerativeModel {
         return GenerativeModel(
             modelName = "gemini-1.5-flash",
-            apiKey = context.getString(R.string.GEMINI_API_KEY)
+            apiKey = context.getString(R.string.GEMINI_API_KEY),
+
+                systemInstruction = content {
+                    text("You are an assistant and give short, user-friendly answers. " +
+                            "If the question is about waste (garbage collection, recycling, smart waste, plastic, etc.), " +
+                            "then answer it properly.")
+                },
+
         )
     }
 

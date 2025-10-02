@@ -13,6 +13,7 @@
 74cfd21704540430df572d53b9802e833d4c1d32
 7601241812b397930b4af12aa691d34e4c544c64
 806f0286079bea5c74d3eb8bb233c2119f6c3625
+80acfb404af58b348e30daaa57f16f36397affa2
 9d998805722545269d977e2cfac5e81f25551443
 a64dc30b1ee47d32b0b32b5eea0c57523911cb21
 a72624ef2b1103a727e91151fd6ddb5d72cc9fed
@@ -50,6 +51,7 @@ f2a5bcc34267a5bb4ba2a2e8b9d4cdb23f11c7ca
 7a60c8884d3686dfad5b51d43e4abcdd90b28db3 
 83fbaf4880cca3f28cd6a309661d730debb24fe5 
 866cca910419a2e60c96a1ecb07868915d597347 
+874fc5b1801cc64ba73d71b8b10fce41b731de1d 
 88e9c0ba1833f6d6e31dd067d004dd4477ca1f52 
 bd2299cfa48d3c943ff67e9593fc87e06e16e7bb 
 be3d8261d704346aa29128ae2dd8d7d9b32ef9c1 
@@ -60,6 +62,7 @@ ee15550b01d5fbb24158c9540131ec07860e1f2b
 f5a565283250b4bfcef358bd6340fcf2b933cfeb 
 426a199cc8c9622b75891286c89f8f81939d6f0f .gitignore
 aa724b77071afcbd9bb398053e05adaf7ac9405a .gitignore
+04a9fe29e580a3430370994f402a3cad9353fca1 .idea
 19b9d170496185cd61287a64b4ede48c9da3c4cd .idea
 2498419bee503fe8dcbbc7bfe01ee82ae3d76a14 .idea
 2a3af4ff166ba05ab4a44bda0e331538e1f9af3c .idea
@@ -77,6 +80,7 @@ b5290c90fdd7578e9075461b446b4e0520a9851f .idea
 b86273d9424b73937ca6ad7933f6b7eeb60f4a3d .idea/compiler.xml
 1a97108c35221a50654ab5e2f394f30cce0dbd66 .idea/deploymentTargetSelector.xml
 1bfed101020f79fb5909eb405a3faa6ce956c3b1 .idea/deploymentTargetSelector.xml
+26c40d13025f99766c65f4622c0096965cee2aae .idea/deploymentTargetSelector.xml
 39a597524b54bac5eadb3c628d8f38d59d6adadc .idea/deploymentTargetSelector.xml
 4c05ce84d34e0b1728eed774b8851944e323614e .idea/deploymentTargetSelector.xml
 b268ef36cd2de3a14ddddf25aa9f5d4e95731e18 .idea/deploymentTargetSelector.xml
@@ -98,12 +102,16 @@ b2c751a35c77d4f7b713fe3bfc2cfb693e4d984f .idea/misc.xml
 360c92f144b05c4a2f95c052ff03ab31de360c59 .kotlin
 7c542244bb963e5f117abfd57a3208f2aa4d5478 .kotlin
 b7df732cc455e18453cd67f8102e68ea1db0bece .kotlin
+f1ec895c3cee5fa888bc81b062a82da6c07eb84c .kotlin
 3ea483032208b0d0037f5084b849c8e93d7af193 .kotlin/errors
 462248bcb2dc739a3332a71265970fa240d83582 .kotlin/errors
 82890173fdebbbc067d26afa40f6a82febbf45ee .kotlin/errors
+a430707ceb68b17a5876e40ed669b42e1193b190 .kotlin/errors
 c5cb0d0f33a99f131a0d5bce8d8607631688e24a .kotlin/errors
 1219b509f098479c6674bbb228c2331631ac72f9 .kotlin/errors/errors-1756397793370.log
+30c3edb563178eda85c744018f2930f7067c2f5c .kotlin/errors/errors-1756916046023.log
 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 Screenshot
+c47ff6cf5d9e09a588325e6a68867561dc94b46b allfileshas.txt
 0144de79a1819d2e5c43130849fda9ffc958b1c3 app
 03a409d2698b319703c4ddf1bfef7e5eb200b92a app
 0c1e4455c63afe710d1dc008d6be6813a93bd7d1 app
@@ -120,6 +128,7 @@ e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 Screenshot
 6a451f0f1ff4bb0883bcf1502a968d33cbc7f7ee app
 7cf08a72b459fc7de91e47853ecfc74f665e8b00 app
 83c4d26c5827cf7178ea394658ceeb2fe9dade87 app
+8c4ef979aba8e73c32797328da59ebe92ece5311 app
 98b1a11682695b67be70467257065377de35ee1b app
 9be99cecf40e05cc04b06ea55709183b9856688d app
 9e81fc400ab880f932b34f7fdedacb721f165f03 app
@@ -138,6 +147,7 @@ fe65f3dfdbea1ebfb58ecf7bda6277517847273d app
 16992235d56ae6e829dea0ff33920ab941a490d2 app/build.gradle.kts
 20cb0e093afb4159390e4d2107fa1a6621b5d0ca app/build.gradle.kts
 29cff8aa44b6690eab04aac1f6ffd65e550adfe3 app/build.gradle.kts
+3802378a4b4fa2b7d618d41a21f109bf390415ca app/build.gradle.kts
 50ddf4cb6fbb7b96b934231dc248a11930799a81 app/build.gradle.kts
 601bd8c352d805245fcbcef469b97b1b72ca39a5 app/build.gradle.kts
 6446d1503cd753d3e9d731a4d4958c6cea3a8f3c app/build.gradle.kts
@@ -173,6 +183,7 @@ a40da33dfb0890a3dd819f18d7d7da2dcf705269 app/src
 a7730c120b7f825750ae66e46a8273f503ff0d2d app/src
 a9b932f142027a8ca94ed06b3a2ade740c59612c app/src
 ab55f65776531460411fe20d33b35fb25d361390 app/src
+bfd380339d2012ed41e648ac85aafc5cdaa2886e app/src
 c6ba28bd64ae5b2467aecef39b89352f425e3ad9 app/src
 d1a01ff8c332c4db81ff62a271ea78c869ab830d app/src
 d55df81e1d8b449b1114def4c043b84b30523427 app/src
@@ -199,6 +210,7 @@ ef76c90fafc7045418dab87463f7db70b398a3ee app/src/androidTest/java/com/example/sm
 433dc195daac2e2df504b9f61caa5f489bc183b2 app/src/main
 459a0d7a148602b38e36396a49e129a3b8edaf57 app/src/main
 4c3f34684a42271021235a280c1c961bb945ec4e app/src/main
+5715c116d289305ff649eb90fc5608bc87df3a39 app/src/main
 6fa6fbe967e5b871f4c85dc6fc2a6bfbab7238b5 app/src/main
 707842e0452076e537a2ed7653c2b008c4cfaff1 app/src/main
 7645d1b64d4be5c2f7bbc5ee66809c8b22934ccc app/src/main
@@ -225,6 +237,7 @@ fdccf3f56a03c341647b9110226d7e93809f5385 app/src/main
 6ae41c50b261b4f13f2f365177928fe303803545 app/src/main/AndroidManifest.xml
 88b54f86647c8de6c5b7f2f0e4e9c80f92c14746 app/src/main/AndroidManifest.xml
 b901dd884aaba3db2680aa213d5236184b170c3b app/src/main/AndroidManifest.xml
+cf7171a3dcc150005031af23086309527e170241 app/src/main/AndroidManifest.xml
 d2aaead4a9dbb63253d66b9ef5b8d90e8781b27c app/src/main/AndroidManifest.xml
 e839352cdd4b7015bca9eb9c4f47ad86170102e5 app/src/main/AndroidManifest.xml
 28d0c693cb9d1b00b6fc6597bdff6bf48a770454 app/src/main/ic_launcher-playstore.png
@@ -248,6 +261,7 @@ e839352cdd4b7015bca9eb9c4f47ad86170102e5 app/src/main/AndroidManifest.xml
 a968b818c728bc8d98749b260c0aafb2a08167ec app/src/main/java
 af98cacf7f80bc01c95e1481ec60a760d43e242b app/src/main/java
 b4c1844b2558ae379c4ceaca7134a79501bc6845 app/src/main/java
+b594485c33c5be090233ba00653edf62ef54815f app/src/main/java
 b8e12dd1565e88762168261b53c23623fb080d19 app/src/main/java
 c233092d770c7478e7293e55f0bb823e26b2bf27 app/src/main/java
 d09209ea7cdd8810d57edbf3df9e2fd177237e77 app/src/main/java
@@ -259,6 +273,7 @@ fbabc0e60e8122d12f694126692aca075d8edf85 app/src/main/java
 fc06496c19cea41742a4ebffdc7e8eff9a6a2207 app/src/main/java
 000f02a3e449271ce7b784962074fea26ec39150 app/src/main/java/com
 09367f568812236192b99d4e07145afbf57d548e app/src/main/java/com
+120f970647cfbfba83967c49bd36274655636f79 app/src/main/java/com
 1f406679f40b153352f21eab941dd7fbd7a54526 app/src/main/java/com
 265d6e5428e479a61585370e82b3bb764a74c78f app/src/main/java/com
 284d7fe96fdc3a7b48e1e1649ef78f64ab05b693 app/src/main/java/com
@@ -300,6 +315,7 @@ f7eaca28d797fad38aec514878bdd1a9557b77a1 app/src/main/java/com
 3764c49592dee8de486fd4d18ae70a2f387fa157 app/src/main/java/com/example
 496fd1647942979d0697822cd7779a439df93d30 app/src/main/java/com/example
 534978b368bbf0bfc3e3ab2a76fef30cc7bc67e8 app/src/main/java/com/example
+6666871520e1b6aa711d44e38c11d0c3a0341ef5 app/src/main/java/com/example
 6ceb46bc407fa585d51a301819a87e65232befee app/src/main/java/com/example
 856919a7a681173031ebcbd0b0f617bad8f7e2fd app/src/main/java/com/example
 a1e1ad53529afc056dace36309cb560a1a4aa2c6 app/src/main/java/com/example
@@ -334,6 +350,7 @@ ae5c10cd0049769d271c3b81915383fb3ae0e2dc app/src/main/java/com/example/smartwast
 aeaba92b3b47190ce7219aa3c8cf2915cbc8e243 app/src/main/java/com/example/smartwaste_user
 b025452f8a09ab1c4b2c882e71c108e68db45b91 app/src/main/java/com/example/smartwaste_user
 b448e622605629b9191154b52e241b3bdab0f362 app/src/main/java/com/example/smartwaste_user
+b882e75d877bb232aaa46308c76bfaced62c3925 app/src/main/java/com/example/smartwaste_user
 c6be1f746b9be13cf8175ddb11eccc8df3fa91b7 app/src/main/java/com/example/smartwaste_user
 ca904a20be8dd2d7890aafe56a4a36f8a01df7f6 app/src/main/java/com/example/smartwaste_user
 d0ad17c655e518c0d739b9dfe3871bf11e8a7740 app/src/main/java/com/example/smartwaste_user
@@ -357,6 +374,7 @@ f18ae9222c5bd555e95fbd7f7ff8a3082ded2ac8 app/src/main/java/com/example/smartwast
 97db6dd53efaa8c8130f68a3ed9439319d8c7633 app/src/main/java/com/example/smartwaste_user/MainActivity.kt
 9b1485a8583ddead957cba6c9baed064a7593bd5 app/src/main/java/com/example/smartwaste_user/MainActivity.kt
 a10e3b956af51779417f98501e676843c73ec235 app/src/main/java/com/example/smartwaste_user/MainActivity.kt
+b53a2d3b9f59d2e0f85c45ad256dc222afc24927 app/src/main/java/com/example/smartwaste_user/MainActivity.kt
 bebd659a207e09f56d9ccd44b39563d589629613 app/src/main/java/com/example/smartwaste_user/MainActivity.kt
 c02d4c225c6ca24804307ee60c6d33856891f234 app/src/main/java/com/example/smartwaste_user/MainActivity.kt
 cf47795eaea7a433e366c01feeb2821e42dea58b app/src/main/java/com/example/smartwaste_user/MainActivity.kt
@@ -845,6 +863,7 @@ e2c8c939e8d4dd399a0099731a1b5d65dcd40207 app/src/main/java/com/example/smartwast
 40d7631a30c92b000a5f400566c4d9fc4cf9b0e6 app/src/main/java/com/example/smartwaste_user/ui/theme/Theme.kt
 c1f0ece3668aef5c9b99955aca86e3b3f995bc2f app/src/main/java/com/example/smartwaste_user/ui/theme/Theme.kt
 1a61dff26d66a26f0e449006e30440b51a4bdcba app/src/main/java/com/example/smartwaste_user/ui/theme/Type.kt
+392c7ba86e54f04cbc70a854ac677d2540ea9f11 app/src/main/java/com/example/smartwaste_user/zegoservice
 00d0998e2616c9230dffa22dce25022821cad911 app/src/main/res
 0d4298d0f24c260712dac9da2121ebb1cdb0eecc app/src/main/res
 15910a0026d3825c381e621ab4e00959c338c01f app/src/main/res
@@ -854,6 +873,7 @@ c1f0ece3668aef5c9b99955aca86e3b3f995bc2f app/src/main/java/com/example/smartwast
 7eec62f85ad1131dc383f40b7c1e2a0c3a45c96f app/src/main/res
 81c0a408cf42917177adc5cb395bfdea6dc81722 app/src/main/res
 8ce2aa5056db8ab1b1c6845eb26e7af7432ca2d7 app/src/main/res
+9155ad37fdf58db20102c4f5cd2674e0d4eb66e0 app/src/main/res
 9a2ef22b8bc185eacbcf1f0702583c59cac22c87 app/src/main/res
 bedcfa821a170b3d3140f1704119802dab30c998 app/src/main/res
 c538e9fed4e4fce342e765faa22614255c5f12a3 app/src/main/res
@@ -924,6 +944,7 @@ f807da062c24aae9c721e3e8a4799a9184afa3ef app/src/main/res/mipmap-xxxhdpi/ic_laun
 1de22ca052fea3d7779af10e3f9a291b00d86de3 app/src/main/res/values
 32459d902fd207aaf959d77f668aa1e1e433eeb6 app/src/main/res/values
 7c789f30b9e465f633ad53d9d55d737ffa13ff25 app/src/main/res/values
+9b3b35d951d97187cc2ee715d25346da83d460b3 app/src/main/res/values
 b4bfd42a30f60d7c595da9412ed64d723078e5a4 app/src/main/res/values
 f8b28350e586c6cd56fab6825ade4ac8ffb673d4 app/src/main/res/values
 f8c6127d327620c93d2b2d00342a68e97b98a48d app/src/main/res/values/colors.xml
@@ -935,6 +956,7 @@ b6e8d647da808ed7bf5b9aec1adb1e304aaa2b19 app/src/main/res/values/strings.xml
 54a1462f0aa3865aa0e326154f1156d24f2cf39b app/src/main/res/values/themes.xml
 8c6bcf34edf71663f3f8c1b811f56605bae007f7 app/src/main/res/values/themes.xml
 c5b78bec3d8939bd9b8db02a8e8079d200b95c2a app/src/main/res/values/themes.xml
+f00009719d6c3ab4c0118e16d75806ab687c2072 app/src/main/res/values/themes.xml
 516abe05699b4a4d708524ba0d8a6ebbd734ec1a app/src/main/res/xml
 4df925582478cf0d469c4cff9a4bb50859f3230a app/src/main/res/xml/backup_rules.xml
 9ee9997b0b4726e57c27b2f7b21462b604ff8a88 app/src/main/res/xml/data_extraction_rules.xml
@@ -964,5 +986,26 @@ e708b1c023ec8b20f512888fe07c5bd3ff77bb8f gradle/wrapper/gradle-wrapper.jar
 00b156c8d294b0f0e2389eecceaa5006eb89aee8 gradle/wrapper/gradle-wrapper.properties
 4f906e0c811fc9e230eb44819f509cd0627f2600 gradlew
 107acd32c4e687021ef32db511e8a206129b88ec gradlew.bat
+9b8157835e6ad4fd3c87694f66b6c246ec4ca260 screenshots
+e46dd929c949a1f5cc59e049c4f7eb2841842c61 screenshots/1.png
+c8d35abe93ebf358d608a90730c2ff7c5a6af8a4 screenshots/10.png
+218e3e6a9a07749219e5f7dbe162dc51318c6378 screenshots/11.png
+c9b755b3c3c4544b377b073d22acb67e080921ff screenshots/12.png
+30cfc6825b27f9c49148cd0ca8841afe1882efd7 screenshots/13.png
+6d76185a0613d47f0e7442873811656f53dbb779 screenshots/14.png
+2167f464ea19442956496cba38152845ee27e22b screenshots/15.png
+f6f3cdff0a9f67a85a2fa954eb065a5e3b59eefa screenshots/16.png
+213b94da0134ba1412734186cba8c3075b22f666 screenshots/17.png
+3adfe18373842199ba169ba2f16a79adaa9dd3ef screenshots/18.png
+c93c79deaa62114bf6ef116fa57200cb3d83bfa5 screenshots/19.png
+3864d0d9b349c51b7a65af1c3737ae9ed8b1be14 screenshots/2.png
+0b591679c6828e8d054a2a47df80f75509aa09c4 screenshots/20.png
+da73e71422992a7d7aec930d25ca75cee42b5242 screenshots/3.png
+9261b972dcda9f49fa235b30b1d44aaf75a9951c screenshots/4.png
+9e8d802f26ff7b9962790ed8d32f499f372e42f4 screenshots/5.png
+814db11e69c2c863c3bdd1006dc625cb29afdc43 screenshots/6.png
+baa125a3b2dc421875de5a37fa7a487935d926f8 screenshots/7.png
+4be9439ea74812a1b1b75c1ab5f1c3ff205931a5 screenshots/8.png
+11a5686cf012d767d7631f10488c5c440c9feb72 screenshots/9.png
 7577a6840c8a863ce0d3b9e5b25ad0d14bf139f0 settings.gradle.kts
 e773b71870d11bac73b3e5cba7fda9cfa6b9c8b2 settings.gradle.kts

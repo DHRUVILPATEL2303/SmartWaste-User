@@ -96,7 +96,6 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:$nav_version")
 //
 //
-//    implementation("com.airbnb.android:lottie-compose:6.6.6")
 
     implementation ("com.google.accompanist:accompanist-pager:0.34.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.34.0")
@@ -109,7 +108,6 @@ dependencies {
 
     implementation("androidx.core:core-splashscreen:1.0.1")
 
-    implementation ("com.canopas.compose-animated-navigationbar:bottombar:1.0.1")
 
     implementation("androidx.compose.material:material-icons-extended-android:1.7.8")
 
@@ -145,7 +143,6 @@ dependencies {
     implementation("com.google.mlkit:translate:17.0.2")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
 
-//    implementation("com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android:+")
 
 
 

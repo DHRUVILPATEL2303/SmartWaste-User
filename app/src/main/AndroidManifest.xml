@@ -44,10 +44,7 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name="com.zegocloud.uikit.prebuilt.call.invite.internal.CallInviteActivity"
-            android:theme="@style/ZegoCallInviteTheme"
-            android:exported="false" />
+
     </application>
 
 </manifest>
