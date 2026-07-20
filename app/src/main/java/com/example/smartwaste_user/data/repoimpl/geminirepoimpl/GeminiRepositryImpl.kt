@@ -9,6 +9,7 @@ import android.os.Build
 import com.example.smartwaste_user.common.ResultState
 import com.example.smartwaste_user.domain.repo.geminirepositry.GeminiRepository
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.Content
 import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.content
 
@@ -34,6 +35,7 @@ class GeminiRepositoryImpl @Inject constructor(
 
         Question: $question
     """.trimIndent()
+
 
         generativeModel.generateContentStream(modifiedPrompt).collect { chunk: GenerateContentResponse ->
             chunk.text?.let { emit(ResultState.Success(it)) }

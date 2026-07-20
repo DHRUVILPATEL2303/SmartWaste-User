@@ -54,17 +54,21 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.smartwaste_user.presentation.navigation.AppNavigation
 import com.example.smartwaste_user.presentation.viewmodels.AuthViewModel
 import com.example.smartwaste_user.presentation.viewmodels.OnboardingViewModel
 import com.example.smartwaste_user.ui.theme.SmartWasteUserTheme
+
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+
 
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 import kotlin.math.roundToInt
 
 @AndroidEntryPoint
@@ -81,8 +85,8 @@ class MainActivity : ComponentActivity() {
                 var showCustomSplash by remember { mutableStateOf(false) }
 //
 //                val mainAppContent: @Composable () -> Unit = {
-                    val authViewModel: AuthViewModel = hiltViewModel()
-                    val onboardingViewModel: OnboardingViewModel = hiltViewModel()
+                val authViewModel: AuthViewModel = hiltViewModel()
+                val onboardingViewModel: OnboardingViewModel = hiltViewModel()
 //
 //                    AppNavigation(
 //                        viewModel = authViewModel,
@@ -103,13 +107,12 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxSize()
                         ) {
                             AppNavigation(
-                        viewModel = authViewModel,
-                        onboardingViewModel = onboardingViewModel,
-                        shouldShowOnboarding = false,
-                        currentUser = Firebase.auth.currentUser
-                    )
+                                viewModel = authViewModel,
+                                onboardingViewModel = onboardingViewModel,
+                                shouldShowOnboarding = false,
+                                currentUser = Firebase.auth.currentUser
+                            )
                         }
-
 
                     }
                 }
@@ -117,7 +120,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 @Composable
 fun SplashScreen(onFinished: () -> Unit) {
     // Animation states
@@ -251,6 +253,5 @@ fun SplashScreen(onFinished: () -> Unit) {
         }
     }
 }
-
 
 

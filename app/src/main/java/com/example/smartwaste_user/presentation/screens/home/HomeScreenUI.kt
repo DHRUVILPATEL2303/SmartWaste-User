@@ -141,6 +141,22 @@ fun HomeScreenUI(
                 )
             )
     ) {
+        val user = userState.succcess
+        val isAreaSelected = user?.areaId?.isNotEmpty() == true
+
+        val darktopAppbar :  @Composable () -> Unit = remember {
+            { DarkTopAppBar(
+                isAreaSelected = isAreaSelected,
+                onMapClick = {
+                    user?.routeId?.let { routeId ->
+                        if (routeId.isNotEmpty()) {
+                            navController.navigate(Routes.RouteMapScreen(routeId = routeId))
+                        }
+                    }
+                }
+
+            )}
+        }
         Scaffold(
             snackbarHost = {
                 SnackbarHost(
@@ -158,19 +174,11 @@ fun HomeScreenUI(
                 )
             },
             topBar = {
-                val user = userState.succcess
-                val isAreaSelected = user?.areaId?.isNotEmpty() == true
+                darktopAppbar()
 
-                DarkTopAppBar(
-                    isAreaSelected = isAreaSelected,
-                    onMapClick = {
-                        user?.routeId?.let { routeId ->
-                            if (routeId.isNotEmpty()) {
-                                navController.navigate(Routes.RouteMapScreen(routeId = routeId))
-                            }
-                        }
-                    }
-                )
+
+
+
             },
             containerColor = Color.Transparent
         ) { padding ->

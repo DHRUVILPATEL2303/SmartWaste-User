@@ -4,6 +4,13 @@
         <item name="android:forceDarkAllowed">false</item>
     </style>
 
+    <style name="ZegoCallInviteTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Optional: customize call invite screen -->
+        <item name="colorPrimary">#4CAF50</item>
+        <item name="colorPrimaryDark">#388E3C</item>
+        <item name="colorAccent">#FFC107</item>
+    </style>
+
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#1C1C1E</item>
 
